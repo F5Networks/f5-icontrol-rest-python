@@ -1,6 +1,5 @@
 import mock
 import pytest
-import requests
 from .. import session
 
 @pytest.fixture()
