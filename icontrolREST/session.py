@@ -106,6 +106,7 @@ def _validate_prefix_collections(prefix_collections):
 
 
 def _validate_instance_name_or_folder(inst_or_folder):
+    # '/' and '~' are illegal characters
     if inst_or_folder == '':
         return True
     if '~' in inst_or_folder:
@@ -122,6 +123,11 @@ def _validate_instance_name_or_folder(inst_or_folder):
 
 
 def _validate_suffix_collections(suffix_collections):
+    # These collections must startwith '/' since they may come after a name
+    # and/or folder and I do not know whether '~folder~name/' is a legal
+    # ending for a URI.
+    # The suffix must not endwith '/' as it is the last component that can
+    # be appended to the URI path.
     if not suffix_collections.startswith('/'):
         error_message =\
             "suffix_collections path element must start with '/', but it's: %s"\
@@ -137,6 +143,7 @@ def _validate_suffix_collections(suffix_collections):
 
 def _validate_uri_parts(bigip_icr_uri, prefix_collections, folder,
                         instance_name, suffix_collections):
+    # Apply the above validators to the correct components.
     _validate_icruri(bigip_icr_uri)
     _validate_prefix_collections(prefix_collections)
     _validate_instance_name_or_folder(folder)
@@ -148,6 +155,12 @@ def _validate_uri_parts(bigip_icr_uri, prefix_collections, folder,
 
 def generate_bigip_uri(bigip_icr_uri, prefix_collections, folder,
                        instance_name,  *args, **kwargs):
+    '''(str, str, str, str) --> str
+
+    This function checks the supplied elements to see if each conforms to
+    the specifiction for the appropriate part of the URI. These validations
+    are conducted by the helper function _validate_uri_parts.
+    '''
     suffix_collections = kwargs.pop('suffix', '')
     _validate_uri_parts(bigip_icr_uri, prefix_collections, instance_name,
                         folder, suffix_collections)
