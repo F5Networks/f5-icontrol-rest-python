@@ -21,34 +21,45 @@ import urlparse
 
 
 class CustomHTTPError(requests.HTTPError):
+    # The Status Code was in the range 207-399
     pass
 
 
 class BigIPInvalidURL(Exception):
+    # Some component to be incorporated into the uri is illegal
     pass
 
 
 class InvalidScheme(BigIPInvalidURL):
+    # The only acceptable scheme is https
     pass
 
 
 class InvalidBigIP_ICRURI(BigIPInvalidURL):
+    # This must contain the servername/address and /mgmt/tm/
     pass
 
 
 class InvalidPrefixCollection(BigIPInvalidURL):
+    # Must not start with '/' because it's relative to the icr_uri
+    # must end with a '/' since there may be names or suffixes
+    # following and they are relative, to the prefix
     pass
 
 
 class InvalidInstanceNameOrFolder(BigIPInvalidURL):
+    # instance names and folders must not contain the '~' or '/' chars
     pass
 
 
 class InvalidSuffixCollection(BigIPInvalidURL):
+    # must start with a '/' since there may be a folder or name before it
     pass
 
 
 def _validate_icruri(bigip_icr_uri):
+    # The icr_uri should specify https, the server name/address, and the path
+    # to the REST-or-tm management interface "/mgmt/tm"
     scheme, netloc, path, _, _ = urlparse.urlsplit(bigip_icr_uri)
     if scheme != 'https':
         raise InvalidScheme(scheme)
@@ -63,6 +74,12 @@ def _validate_icruri(bigip_icr_uri):
 
 
 def _validate_prefix_collections(prefix_collections):
+    # The prefix collections are everything in the URI after /mgmt/tm/ and
+    # before the 'folder'  It must not start with '/' because it's relative
+    # to the /mgmt/tm REST management path, and it must end with '/' since the
+    # subequent components expect to be addressed relative to it.
+    # Additionally the first '/' delimited component of the prefix collection
+    # must be an "organizing collection" (see the REST users guide).
     if prefix_collections.startswith('/'):
         error_message =\
             "prefix_collections element must not start with '/', but it's: %s"\
