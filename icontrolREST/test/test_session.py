@@ -1,3 +1,17 @@
+# Copyright 2015 F5 Networks Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
 import mock
 import pytest
 
@@ -29,6 +43,7 @@ def uparts():
                   'suffix': '/members/m1'}
     return parts_dict
 
+
 # Test uri component validation
 def test_incorrect_uri_construction_bad_scheme(uparts):
     uparts['bigip_icr_uri'] = 'hryttps://0.0.0.0/mgmt/tm/'
@@ -57,8 +72,8 @@ def test_incorrect_uri_construction_bad_prefix_collection_wrong_start(uparts):
     with pytest.raises(session.InvalidPrefixCollection) as IR:
         session.generate_bigip_uri(**uparts)
     test_value =\
-    "prefix_collections element must not start with '/', but it's: %s"\
-    % uparts['prefix_collections']
+        "prefix_collections element must not start with '/', but it's: %s"\
+        % uparts['prefix_collections']
     assert IR.value.message == test_value
 
 
@@ -66,9 +81,10 @@ def test_incorrect_uri_construction_bad_prefix_collection_wrong_root(uparts):
     uparts['prefix_collections'] = 'foo/bar/'
     with pytest.raises(session.InvalidPrefixCollection) as IR:
         session.generate_bigip_uri(**uparts)
-    test_value = "foo is not in the list of root collections: ['actions',"+\
-    " 'analytics', 'apm', 'asm', 'auth', 'cli', 'cm', 'gtm', 'ltm', 'net',"+\
-    " 'pem', 'security', 'sys', 'transaction', 'util', 'vcmp', 'wam', 'wom']"
+    test_value = "foo is not in the list of root collections: ['actions'," +\
+        " 'analytics', 'apm', 'asm', 'auth', 'cli', 'cm', 'gtm', 'ltm'," +\
+        " 'net', 'pem', 'security', 'sys', 'transaction', 'util', 'vcmp'," +\
+        " 'wam', 'wom']"
     assert IR.value.message == test_value
 
 
@@ -77,8 +93,8 @@ def test_incorrect_uri_construction_bad_prefix_collection_wrong_end(uparts):
     with pytest.raises(session.InvalidPrefixCollection) as IR:
         session.generate_bigip_uri(**uparts)
     test_value =\
-    "prefix_collections path element must end with '/', but it's: %s"\
-    % uparts['prefix_collections']
+        "prefix_collections path element must end with '/', but it's: %s"\
+        % uparts['prefix_collections']
     assert IR.value.message == test_value
 
 
@@ -104,7 +120,7 @@ def test_incorrect_uri_construction_illegal_suffix_nonslash_first(uparts):
     uparts['suffix'] = 'ham'
     with pytest.raises(session.InvalidSuffixCollection) as II:
         session.generate_bigip_uri(**uparts)
-    test_value = "suffix_collections path element must start with '/', but "+\
+    test_value = "suffix_collections path element must start with '/', but " +\
                  "it's: %s" % uparts['suffix']
     assert II.value.message == test_value
 
@@ -113,7 +129,7 @@ def test_incorrect_uri_construction_illegal_suffix_slash_last(uparts):
     uparts['suffix'] = '/ham/'
     with pytest.raises(session.InvalidSuffixCollection) as II:
         session.generate_bigip_uri(**uparts)
-    test_value = "suffix_collections path element must not end with '/', "+\
+    test_value = "suffix_collections path element must not end with '/', " +\
                  "but it's: %s" % uparts['suffix']
     assert II.value.message == test_value
 
@@ -162,55 +178,55 @@ def test_correct_uri_construction_nameless_and_suffixless(uparts):
 
 # Test exception handling
 def test_wrapped_delete_success(ICRS):
-    response_obj = ICRS.delete('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+    ICRS.delete('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
 def test_wrapped_delete_207_fail(ICRS):
     ICRS.session.delete.return_value.status_code = 207
     with pytest.raises(session.CustomHTTPError) as CHE:
-        response_obj = ICRS.delete('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+        ICRS.delete('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_get_success(ICRS):
-    response_obj = ICRS.get('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+    ICRS.get('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
 def test_wrapped_get_207_fail(ICRS):
     ICRS.session.get.return_value.status_code = 207
     with pytest.raises(session.CustomHTTPError) as CHE:
-        response_obj = ICRS.get('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+        ICRS.get('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_patch_success(ICRS):
-    response_obj = ICRS.patch('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+    ICRS.patch('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
 def test_wrapped_patch_207_fail(ICRS):
     ICRS.session.patch.return_value.status_code = 207
     with pytest.raises(session.CustomHTTPError) as CHE:
-        response_obj = ICRS.patch('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+        ICRS.patch('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_post_success(ICRS):
-    response_obj = ICRS.post('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+    ICRS.post('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
 def test_wrapped_post_207_fail(ICRS):
     ICRS.session.post.return_value.status_code = 207
     with pytest.raises(session.CustomHTTPError) as CHE:
-        response_obj = ICRS.post('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+        ICRS.post('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_put_success(ICRS):
-    response_obj = ICRS.put('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+    ICRS.put('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
 def test_wrapped_put_207_fail(ICRS):
     ICRS.session.put.return_value.status_code = 207
     with pytest.raises(session.CustomHTTPError) as CHE:
-        response_obj = ICRS.put('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME') 
+        ICRS.put('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
