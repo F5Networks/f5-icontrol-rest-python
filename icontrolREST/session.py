@@ -3,29 +3,36 @@ import logging
 import os
 import requests
 import time
-import urllib
 import urlparse
+
 
 class CustomHTTPError(requests.HTTPError):
     pass
 
+
 class BigIPInvalidURL(Exception):
     pass
+
 
 class InvalidScheme(BigIPInvalidURL):
     pass
 
+
 class InvalidBigIP_ICRURI(BigIPInvalidURL):
     pass
+
 
 class InvalidPrefixCollection(BigIPInvalidURL):
     pass
 
+
 class InvalidInstanceNameOrFolder(BigIPInvalidURL):
     pass
 
+
 class InvalidSuffixCollection(BigIPInvalidURL):
     pass
+
 
 def _validate_icruri(bigip_icr_uri):
     scheme, netloc, path, _, _ =  urlparse.urlsplit(bigip_icr_uri)
@@ -41,6 +48,7 @@ def _validate_icruri(bigip_icr_uri):
             error_message = path
         raise InvalidBigIP_ICRURI(error_message)
     return True
+
 
 def _validate_prefix_collections(prefix_collections):
     if prefix_collections.startswith('/'):
@@ -65,6 +73,7 @@ def _validate_prefix_collections(prefix_collections):
         raise InvalidPrefixCollection(error_message)
     return True
 
+
 def _validate_instance_name_or_folder(inst_or_folder):
     if inst_or_folder == '':
         return True
@@ -77,6 +86,7 @@ def _validate_instance_name_or_folder(inst_or_folder):
         "instance names and folders cannot contain '/', but it's: %s" % inst_or_folder
         raise InvalidInstanceNameOrFolder(error_message)
     return True
+
 
 def _validate_suffix_collections(suffix_collections):
     if not suffix_collections.startswith('/'):
@@ -91,6 +101,7 @@ def _validate_suffix_collections(suffix_collections):
         raise InvalidSuffixCollection(error_message)
     return True
 
+
 def _validate_uri_parts(bigip_icr_uri, prefix_collections, folder, instance_name, suffix_collections):
     _validate_icruri(bigip_icr_uri)
     _validate_prefix_collections(prefix_collections)
@@ -99,6 +110,7 @@ def _validate_uri_parts(bigip_icr_uri, prefix_collections, folder, instance_name
     if suffix_collections:
         _validate_suffix_collections(suffix_collections)
     return True
+
 
 def generate_bigip_uri(bigip_icr_uri, prefix_collections, folder, instance_name,  *args, **kwargs):
     suffix_collections = kwargs.pop('suffix', '')
@@ -113,6 +125,7 @@ def generate_bigip_uri(bigip_icr_uri, prefix_collections, folder, instance_name,
     REST_uri = bigip_icr_uri+prefix_collections+tilded_folder_and_instance+suffix_collections
     return REST_uri
 
+
 def _config_logging(logdir, methodname, level, cls_name, *args, **kwargs):
     # Configure output handler for the HTTP method's log
     log_path = os.path.join(logdir, methodname)
@@ -124,10 +137,12 @@ def _config_logging(logdir, methodname, level, cls_name, *args, **kwargs):
     logger.addHandler(logfile_handler)
     return logger
 
+
 def _log_HTTP_verb_method_precall(logger, methodname, level, cls_name, *args, **kwargs):
     pre_message = "%s.%s WITH args: %s, kwargs: %s" %\
             (cls_name, methodname, args, kwargs)
     logger.log(level, pre_message)
+
 
 def _log_HTTP_verb_method_postcall(logger, level, response):
     post_message = "RESPONSE::STATUS: %s Content-Type: %s Content-Encoding: %s" %\
@@ -135,6 +150,7 @@ def _log_HTTP_verb_method_postcall(logger, level, response):
                      response.headers.get('Content-Type', None),
                      response.headers.get('Content-Encoding', None))
     logger.log(level, post_message)
+
 
 def decorate_HTTP_verb_method(method):
     @functools.wraps(method)
