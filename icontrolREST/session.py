@@ -154,7 +154,7 @@ def _validate_uri_parts(bigip_icr_uri, prefix_collections, folder,
 
 
 def generate_bigip_uri(bigip_icr_uri, prefix_collections, folder,
-                       instance_name,  *args, **kwargs):
+                       instance_name, **kwargs):
     '''(str, str, str, str) --> str
 
     This function checks the supplied elements to see if each conforms to
@@ -176,7 +176,7 @@ def generate_bigip_uri(bigip_icr_uri, prefix_collections, folder,
     return REST_uri
 
 
-def _config_logging(logdir, methodname, level, cls_name, *args, **kwargs):
+def _config_logging(logdir, methodname, level, cls_name, **kwargs):
     # Configure output handler for the HTTP method's log
     log_path = os.path.join(logdir, methodname)
     logfile_handler = logging.FileHandler(log_path)
@@ -189,10 +189,10 @@ def _config_logging(logdir, methodname, level, cls_name, *args, **kwargs):
     return logger
 
 
-def _log_HTTP_verb_method_precall(logger, methodname, level, cls_name, *args,
+def _log_HTTP_verb_method_precall(logger, methodname, level, cls_name,
                                   **kwargs):
-    pre_message = "%s.%s WITH args: %s, kwargs: %s" %\
-        (cls_name, methodname, args, kwargs)
+    pre_message = "%s.%s WITH kwargs: %s" %\
+        (cls_name, methodname, kwargs)
     logger.log(level, pre_message)
 
 
@@ -207,16 +207,16 @@ def _log_HTTP_verb_method_postcall(logger, level, response):
 
 def decorate_HTTP_verb_method(method):
     @functools.wraps(method)
-    def wrapper(self, prefix_collections, folder, instance_name, *args,
+    def wrapper(self, prefix_collections, folder, instance_name,
                 **kwargs):
         REST_uri = generate_bigip_uri(self.bigip.icr_url, prefix_collections,
-                                      folder, instance_name, *args, **kwargs)
+                                      folder, instance_name, **kwargs)
         logger = _config_logging(self.log_dir, method.__name__, self.log_level,
-                                 self.__class__.__name__, *args, **kwargs)
+                                 self.__class__.__name__, **kwargs)
         _log_HTTP_verb_method_precall(logger, method.__name__,
                                       self.log_level, self.__class__.__name__,
-                                      *args, **kwargs)
-        response = method(self, REST_uri, *args, **kwargs)
+                                      **kwargs)
+        response = method(self, REST_uri, **kwargs)
         _log_HTTP_verb_method_postcall(logger, self.log_level, response)
         response.raise_for_status()
         if response.status_code not in range(200, 207):
