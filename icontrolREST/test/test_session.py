@@ -52,24 +52,27 @@ def test_incorrect_uri_construction_bad_base_nonslash_last(uparts):
     assert IR.value.message == test_value
 
 
-def test_incorrect_uri_construction_bad_prefix_collection_wrong_startswith(uparts):
+def test_incorrect_uri_construction_bad_prefix_collection_wrong_start(uparts):
     uparts['prefix_collections'] = '/actions/bar/'
     with pytest.raises(session.InvalidPrefixCollection) as IR:
         session.generate_bigip_uri(**uparts)
     test_value =\
-    "prefix_collections path element must not start with '/', but it's: %s"\
+    "prefix_collections element must not start with '/', but it's: %s"\
     % uparts['prefix_collections']
     assert IR.value.message == test_value
 
 
-def test_incorrect_uri_construction_bad_prefix_collection_wrong_root_collection(uparts):
+def test_incorrect_uri_construction_bad_prefix_collection_wrong_root(uparts):
     uparts['prefix_collections'] = 'foo/bar/'
     with pytest.raises(session.InvalidPrefixCollection) as IR:
         session.generate_bigip_uri(**uparts)
-    assert IR.value.message == "foo is not in the list of root collections: ['actions', 'analytics', 'apm', 'asm', 'auth', 'cli', 'cm', 'gtm', 'ltm', 'net', 'pem', 'security', 'sys', 'transaction', 'util', 'vcmp', 'wam', 'wom']"
+    test_value = "foo is not in the list of root collections: ['actions',"+\
+    " 'analytics', 'apm', 'asm', 'auth', 'cli', 'cm', 'gtm', 'ltm', 'net',"+\
+    " 'pem', 'security', 'sys', 'transaction', 'util', 'vcmp', 'wam', 'wom']"
+    assert IR.value.message == test_value
 
 
-def test_incorrect_uri_construction_bad_prefix_collection_wrong_endswith(uparts):
+def test_incorrect_uri_construction_bad_prefix_collection_wrong_end(uparts):
     uparts['prefix_collections'] = 'actions/bar'
     with pytest.raises(session.InvalidPrefixCollection) as IR:
         session.generate_bigip_uri(**uparts)
@@ -83,28 +86,36 @@ def test_incorrect_uri_construction_illegal_slash_folder_char(uparts):
     uparts['folder'] = 'spam/ham'
     with pytest.raises(session.InvalidInstanceNameOrFolder) as II:
         session.generate_bigip_uri(**uparts)
-    assert II.value.message == "instance names and folders cannot contain '/', but it's: spam/ham"
+    test_value = "instance names and folders cannot contain '/', but it's: %s"\
+                 % uparts['folder']
+    assert II.value.message == test_value
 
 
 def test_incorrect_uri_construction_illegal_tilde_folder_char(uparts):
     uparts['folder'] = 'spam~ham'
     with pytest.raises(session.InvalidInstanceNameOrFolder) as II:
         session.generate_bigip_uri(**uparts)
-    assert II.value.message == "instance names and folders cannot contain '~', but it's: spam~ham"
+    test_value = "instance names and folders cannot contain '~', but it's: %s"\
+                 % uparts['folder']
+    assert II.value.message == test_value
 
 
 def test_incorrect_uri_construction_illegal_suffix_nonslash_first(uparts):
     uparts['suffix'] = 'ham'
     with pytest.raises(session.InvalidSuffixCollection) as II:
         session.generate_bigip_uri(**uparts)
-    assert II.value.message == "suffix_collections path element must start with '/', but it's: ham"
+    test_value = "suffix_collections path element must start with '/', but "+\
+                 "it's: %s" % uparts['suffix']
+    assert II.value.message == test_value
 
 
 def test_incorrect_uri_construction_illegal_suffix_slash_last(uparts):
     uparts['suffix'] = '/ham/'
     with pytest.raises(session.InvalidSuffixCollection) as II:
         session.generate_bigip_uri(**uparts)
-    assert II.value.message == "suffix_collections path element must not end with '/', but it's: /ham/"
+    test_value = "suffix_collections path element must not end with '/', "+\
+                 "but it's: %s" % uparts['suffix']
+    assert II.value.message == test_value
 
 
 # Test uri construction
@@ -127,7 +138,7 @@ def test_correct_uri_construction_folderless_and_nameless(uparts):
     assert uri == "https://0.0.0.0/mgmt/tm/ltm/bar/members/m1"
 
 
-def test_correct_uri_construction_folderless_and_nameless_and_suffixless(uparts):
+def test_correct_uri_construction_folder_name_and_suffixless(uparts):
     uparts['folder'] = ''
     uparts['instance_name'] = ''
     uparts['suffix'] = ''
