@@ -59,7 +59,7 @@ class InvalidSuffixCollection(BigIPInvalidURL):
 
 def _validate_icruri(bigip_icr_uri):
     # The icr_uri should specify https, the server name/address, and the path
-    # to the REST-or-tm management interface "/mgmt/tm"
+    # to the REST-or-tm management interface "/mgmt/tm/"
     scheme, netloc, path, _, _ = urlparse.urlsplit(bigip_icr_uri)
     if scheme != 'https':
         raise InvalidScheme(scheme)
@@ -160,6 +160,18 @@ def generate_bigip_uri(bigip_icr_uri, prefix_collections, folder,
     This function checks the supplied elements to see if each conforms to
     the specifiction for the appropriate part of the URI. These validations
     are conducted by the helper function _validate_uri_parts.
+    After validation the parts are assembled into a valid BigIP REST URI
+    string which is then submitted with appropriate metadata.
+
+    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/', 'ltm/nat/',\
+            'CUSTOMER1', 'nat52', params={'a':1})
+    'https://0.0.0.0/mgmt/tm/ltm/nat/~CUSTOMER1~nat52'
+    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/', 'ltm/nat/',\
+            'CUSTOMER1', 'nat52', params={'a':1}, suffix='/wacky')
+    'https://0.0.0.0/mgmt/tm/ltm/nat/~CUSTOMER1~nat52/wacky'
+    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/', 'ltm/nat/', '', '',\
+            params={'a':1}, suffix='/thwocky')
+    'https://0.0.0.0/mgmt/tm/ltm/nat/thwocky'
     '''
     suffix_collections = kwargs.pop('suffix', '')
     _validate_uri_parts(bigip_icr_uri, prefix_collections, instance_name,
@@ -207,7 +219,7 @@ def _log_HTTP_verb_method_postcall(logger, level, response):
 
 def decorate_HTTP_verb_method(method):
     @functools.wraps(method)
-    def wrapper(self, prefix_collections, folder, instance_name,
+    def wrapper(self, prefix_collections, folder='', instance_name='',
                 **kwargs):
         REST_uri = generate_bigip_uri(self.bigip.icr_url, prefix_collections,
                                       folder, instance_name, **kwargs)
@@ -280,3 +292,7 @@ class IControlRESTSession(object):
     @decorate_HTTP_verb_method
     def put(self, uri, data=None, **kwargs):
         return self.session.put(uri, data=None, **kwargs)
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
