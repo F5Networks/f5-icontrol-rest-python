@@ -20,9 +20,9 @@ from icontrolREST import session
 
 @pytest.fixture()
 def ICRS():
-    mock_BigIP = mock.MagicMock()
-    mock_BigIP.icr_url = 'https://0.0.0.0/mgmt/tm/'
-    fake_ICRS = session.IControlRESTSession(mock_BigIP, 'admin', 'admin')
+    mock_bigip_icr_uri = 'https://0.0.0.0/mgmt/tm/'
+    fake_ICRS = session.IControlRESTSession(mock_bigip_icr_uri, 'admin',
+                                            'admin')
     fake_ICRS.session = mock.MagicMock()
     mock_response = mock.MagicMock()
     mock_response.status_code = 200

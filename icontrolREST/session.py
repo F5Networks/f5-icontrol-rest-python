@@ -221,7 +221,7 @@ def decorate_HTTP_verb_method(method):
     @functools.wraps(method)
     def wrapper(self, prefix_collections, folder='', instance_name='',
                 **kwargs):
-        REST_uri = generate_bigip_uri(self.bigip.icr_url, prefix_collections,
+        REST_uri = generate_bigip_uri(self.bigip_icr_uri, prefix_collections,
                                       folder, instance_name, **kwargs)
         logger = _config_logging(self.log_dir, method.__name__, self.log_level,
                                  self.__class__.__name__, **kwargs)
@@ -246,13 +246,12 @@ class IControlRESTSession(object):
 
     XXXX
     """
-    def __init__(self, bigip, username, password, timeout=30,
+    def __init__(self, bigip_icr_uri, username, password, timeout=30,
                  log_level=logging.DEBUG):
         # Compose with a Session obj
-        self.bigip = bigip
+        self.bigip_icr_uri = bigip_icr_uri
         self.session = requests.Session()
 
-        self.bigip_version = None  # XXXimplement call to get this
         # Configure with passed parameters
         self.session.auth = (username, password)
         self.session.timeout = timeout
