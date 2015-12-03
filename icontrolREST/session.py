@@ -79,7 +79,8 @@ def _validate_prefix_collections(prefix_collections):
     # to the /mgmt/tm REST management path, and it must end with '/' since the
     # subequent components expect to be addressed relative to it.
     # Additionally the first '/' delimited component of the prefix collection
-    # must be an "organizing collection" (see the REST users guide).
+    # must be an "organizing collection". See the REST users guide:
+    # https://devcentral.f5.com/d/icontrol-rest-user-guide-version-1150
     if prefix_collections.startswith('/'):
         error_message =\
             "prefix_collections element must not start with '/', but it's: %s"\
@@ -90,17 +91,6 @@ def _validate_prefix_collections(prefix_collections):
         error_message =\
             "prefix_collections path element must end with '/', but it's: %s"\
             % prefix_collections
-        raise InvalidPrefixCollection(error_message)
-
-    organizing_collections = [
-        'actions', 'analytics', 'apm', 'asm', 'auth',
-        'cli', 'cm', 'gtm', 'ltm', 'net', 'pem',
-        'security', 'sys', 'transaction', 'util', 'vcmp',
-        'wam', 'wom']
-    root_collection = prefix_collections.split('/')[0]
-    if root_collection not in organizing_collections:
-        error_message = '%s is not in the list of root collections: %s'\
-                        % (root_collection, organizing_collections)
         raise InvalidPrefixCollection(error_message)
     return True
 
@@ -202,9 +192,9 @@ def _config_logging(logdir, methodname, level, cls_name, **kwargs):
 
 
 def _log_HTTP_verb_method_precall(logger, methodname, level, cls_name,
-                                  **kwargs):
-    pre_message = "%s.%s WITH kwargs: %s" %\
-        (cls_name, methodname, kwargs)
+                                  request_uri, **kwargs):
+    pre_message = "%s.%s WITH uri: %s AND kwargs: %s" %\
+        (cls_name, methodname, request_uri, kwargs)
     logger.log(level, pre_message)
 
 
@@ -227,7 +217,7 @@ def decorate_HTTP_verb_method(method):
                                  self.__class__.__name__, **kwargs)
         _log_HTTP_verb_method_precall(logger, method.__name__,
                                       self.log_level, self.__class__.__name__,
-                                      **kwargs)
+                                      REST_uri, **kwargs)
         response = method(self, REST_uri, **kwargs)
         _log_HTTP_verb_method_postcall(logger, self.log_level, response)
         response.raise_for_status()

@@ -77,17 +77,6 @@ def test_incorrect_uri_construction_bad_prefix_collection_wrong_start(uparts):
     assert IR.value.message == test_value
 
 
-def test_incorrect_uri_construction_bad_prefix_collection_wrong_root(uparts):
-    uparts['prefix_collections'] = 'foo/bar/'
-    with pytest.raises(session.InvalidPrefixCollection) as IR:
-        session.generate_bigip_uri(**uparts)
-    test_value = "foo is not in the list of root collections: ['actions'," +\
-        " 'analytics', 'apm', 'asm', 'auth', 'cli', 'cm', 'gtm', 'ltm'," +\
-        " 'net', 'pem', 'security', 'sys', 'transaction', 'util', 'vcmp'," +\
-        " 'wam', 'wom']"
-    assert IR.value.message == test_value
-
-
 def test_incorrect_uri_construction_bad_prefix_collection_wrong_end(uparts):
     uparts['prefix_collections'] = 'actions/bar'
     with pytest.raises(session.InvalidPrefixCollection) as IR:
