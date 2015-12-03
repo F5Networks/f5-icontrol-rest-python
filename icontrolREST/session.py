@@ -20,7 +20,7 @@ import time
 import urlparse
 
 
-class CustomHTTPError(requests.HTTPError):
+class iControlUnexpectedHTTPError(requests.HTTPError):
     # The Status Code was in the range 207-399
     pass
 
@@ -226,12 +226,12 @@ def decorate_HTTP_verb_method(method):
                             (response.status_code,
                              response.reason,
                              response.uri)
-            raise CustomHTTPError(error_message, response=response)
+            raise iControlUnexpectedHTTPError(error_message, response=response)
         return response
     return wrapper
 
 
-class IControlRESTSession(object):
+class iControlRESTSession(object):
     """XXX
 
     XXXX

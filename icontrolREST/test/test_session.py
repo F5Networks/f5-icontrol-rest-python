@@ -19,19 +19,19 @@ from icontrolREST import session
 
 
 @pytest.fixture()
-def ICRS():
+def iCRS():
     mock_bigip_icr_uri = 'https://0.0.0.0/mgmt/tm/'
-    fake_ICRS = session.IControlRESTSession(mock_bigip_icr_uri, 'admin',
+    fake_iCRS = session.iControlRESTSession(mock_bigip_icr_uri, 'admin',
                                             'admin')
-    fake_ICRS.session = mock.MagicMock()
+    fake_iCRS.session = mock.MagicMock()
     mock_response = mock.MagicMock()
     mock_response.status_code = 200
-    fake_ICRS.session.delete.return_value = mock_response
-    fake_ICRS.session.get.return_value = mock_response
-    fake_ICRS.session.patch.return_value = mock_response
-    fake_ICRS.session.post.return_value = mock_response
-    fake_ICRS.session.put.return_value = mock_response
-    return fake_ICRS
+    fake_iCRS.session.delete.return_value = mock_response
+    fake_iCRS.session.get.return_value = mock_response
+    fake_iCRS.session.patch.return_value = mock_response
+    fake_iCRS.session.post.return_value = mock_response
+    fake_iCRS.session.put.return_value = mock_response
+    return fake_iCRS
 
 
 @pytest.fixture()
@@ -166,56 +166,56 @@ def test_correct_uri_construction_nameless_and_suffixless(uparts):
 
 
 # Test exception handling
-def test_wrapped_delete_success(ICRS):
-    ICRS.delete('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_delete_success(iCRS):
+    iCRS.delete('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
-def test_wrapped_delete_207_fail(ICRS):
-    ICRS.session.delete.return_value.status_code = 207
-    with pytest.raises(session.CustomHTTPError) as CHE:
-        ICRS.delete('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_delete_207_fail(iCRS):
+    iCRS.session.delete.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
+        iCRS.delete('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
-def test_wrapped_get_success(ICRS):
-    ICRS.get('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_get_success(iCRS):
+    iCRS.get('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
-def test_wrapped_get_207_fail(ICRS):
-    ICRS.session.get.return_value.status_code = 207
-    with pytest.raises(session.CustomHTTPError) as CHE:
-        ICRS.get('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_get_207_fail(iCRS):
+    iCRS.session.get.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
+        iCRS.get('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
-def test_wrapped_patch_success(ICRS):
-    ICRS.patch('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_patch_success(iCRS):
+    iCRS.patch('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
-def test_wrapped_patch_207_fail(ICRS):
-    ICRS.session.patch.return_value.status_code = 207
-    with pytest.raises(session.CustomHTTPError) as CHE:
-        ICRS.patch('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_patch_207_fail(iCRS):
+    iCRS.session.patch.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
+        iCRS.patch('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
-def test_wrapped_post_success(ICRS):
-    ICRS.post('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_post_success(iCRS):
+    iCRS.post('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
-def test_wrapped_post_207_fail(ICRS):
-    ICRS.session.post.return_value.status_code = 207
-    with pytest.raises(session.CustomHTTPError) as CHE:
-        ICRS.post('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_post_207_fail(iCRS):
+    iCRS.session.post.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
+        iCRS.post('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
-def test_wrapped_put_success(ICRS):
-    ICRS.put('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_put_success(iCRS):
+    iCRS.put('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
 
 
-def test_wrapped_put_207_fail(ICRS):
-    ICRS.session.put.return_value.status_code = 207
-    with pytest.raises(session.CustomHTTPError) as CHE:
-        ICRS.put('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_put_207_fail(iCRS):
+    iCRS.session.put.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
+        iCRS.put('ltm/nat/', 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
     assert CHE.value.message.startswith('207 Unexpected Error: ')
