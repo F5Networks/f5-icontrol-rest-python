@@ -281,7 +281,3 @@ class iControlRESTSession(object):
     @decorate_HTTP_verb_method
     def put(self, uri, data=None, **kwargs):
         return self.session.put(uri, data=None, **kwargs)
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
