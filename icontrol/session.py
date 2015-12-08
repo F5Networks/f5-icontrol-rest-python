@@ -57,20 +57,17 @@ class InvalidSuffixCollection(BigIPInvalidURL):
     pass
 
 
-def _validate_icruri(bigip_icr_uri):
+def _validate_icruri(base_uri):
     # The icr_uri should specify https, the server name/address, and the path
     # to the REST-or-tm management interface "/mgmt/tm/"
-    scheme, netloc, path, _, _ = urlparse.urlsplit(bigip_icr_uri)
+    scheme, netloc, path, _, _ = urlparse.urlsplit(base_uri)
     if scheme != 'https':
         raise InvalidScheme(scheme)
-    if path != '/mgmt/tm/':
-        if not path.endswith('/'):
-            error_message =\
-                "The bigip_icr_uri must end with '/'!!  But it's: %s" % path
-        else:
-            error_message = path
+    if not path.startswith('/mgmt/tm/'):
+        error_message = "The path must start with '/mgmt/tm/'!!  But it's:" +\
+            " '%s'" % path[:10]
         raise InvalidBigIP_ICRURI(error_message)
-    return True
+    return _validate_prefix_collections(path[9:])
 
 
 def _validate_prefix_collections(prefix_collections):
@@ -81,12 +78,6 @@ def _validate_prefix_collections(prefix_collections):
     # Additionally the first '/' delimited component of the prefix collection
     # must be an "organizing collection". See the REST users guide:
     # https://devcentral.f5.com/d/icontrol-rest-user-guide-version-1150
-    if prefix_collections.startswith('/'):
-        error_message =\
-            "prefix_collections element must not start with '/', but it's: %s"\
-            % prefix_collections
-        raise InvalidPrefixCollection(error_message)
-
     if not prefix_collections.endswith('/'):
         error_message =\
             "prefix_collections path element must end with '/', but it's: %s"\
@@ -131,11 +122,9 @@ def _validate_suffix_collections(suffix_collections):
     return True
 
 
-def _validate_uri_parts(bigip_icr_uri, prefix_collections, folder,
-                        instance_name, suffix_collections):
+def _validate_uri_parts(base_uri, folder, instance_name, suffix_collections):
     # Apply the above validators to the correct components.
-    _validate_icruri(bigip_icr_uri)
-    _validate_prefix_collections(prefix_collections)
+    _validate_icruri(base_uri)
     _validate_instance_name_or_folder(folder)
     _validate_instance_name_or_folder(instance_name)
     if suffix_collections:
@@ -143,9 +132,8 @@ def _validate_uri_parts(bigip_icr_uri, prefix_collections, folder,
     return True
 
 
-def generate_bigip_uri(bigip_icr_uri, prefix_collections, folder,
-                       instance_name, **kwargs):
-    '''(str, str, str, str) --> str
+def generate_bigip_uri(base_uri, folder, instance_name, **kwargs):
+    '''(str, str, str) --> str
 
     This function checks the supplied elements to see if each conforms to
     the specifiction for the appropriate part of the URI. These validations
@@ -153,19 +141,18 @@ def generate_bigip_uri(bigip_icr_uri, prefix_collections, folder,
     After validation the parts are assembled into a valid BigIP REST URI
     string which is then submitted with appropriate metadata.
 
-    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/', 'ltm/nat/',\
+    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/',\
             'CUSTOMER1', 'nat52', params={'a':1})
     'https://0.0.0.0/mgmt/tm/ltm/nat/~CUSTOMER1~nat52'
-    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/', 'ltm/nat/',\
+    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/',\
             'CUSTOMER1', 'nat52', params={'a':1}, suffix='/wacky')
     'https://0.0.0.0/mgmt/tm/ltm/nat/~CUSTOMER1~nat52/wacky'
-    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/', 'ltm/nat/', '', '',\
+    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/', '', '',\
             params={'a':1}, suffix='/thwocky')
     'https://0.0.0.0/mgmt/tm/ltm/nat/thwocky'
     '''
     suffix_collections = kwargs.pop('suffix', '')
-    _validate_uri_parts(bigip_icr_uri, prefix_collections, instance_name,
-                        folder, suffix_collections)
+    _validate_uri_parts(base_uri, instance_name, folder, suffix_collections)
     if folder != '':
         folder = '~'+folder
     if instance_name != '':
@@ -173,8 +160,7 @@ def generate_bigip_uri(bigip_icr_uri, prefix_collections, folder,
     tilded_folder_and_instance = folder+instance_name
     if suffix_collections and not tilded_folder_and_instance:
         suffix_collections = suffix_collections.lstrip('/')
-    REST_uri = bigip_icr_uri+prefix_collections+tilded_folder_and_instance +\
-        suffix_collections
+    REST_uri = base_uri + tilded_folder_and_instance + suffix_collections
     return REST_uri
 
 
@@ -208,11 +194,12 @@ def _log_HTTP_verb_method_postcall(logger, level, response):
 
 
 def decorate_HTTP_verb_method(method):
+    # NOTE:  "self" refers to a RESTInterfaceCollection instance!
     @functools.wraps(method)
-    def wrapper(self, prefix_collections, folder='', instance_name='',
+    def wrapper(self, RIC_base_uri, folder='', instance_name='',
                 **kwargs):
-        REST_uri = generate_bigip_uri(self.bigip_icr_uri, prefix_collections,
-                                      folder, instance_name, **kwargs)
+        REST_uri = generate_bigip_uri(RIC_base_uri, folder, instance_name,
+                                      **kwargs)
         logger = _config_logging(self.log_dir, method.__name__, self.log_level,
                                  self.__class__.__name__, **kwargs)
         _log_HTTP_verb_method_precall(logger, method.__name__,
@@ -236,10 +223,8 @@ class iControlRESTSession(object):
 
     XXXX
     """
-    def __init__(self, bigip_icr_uri, username, password, timeout=30,
-                 log_level=logging.DEBUG):
+    def __init__(self, username, password, timeout=30, loglevel=logging.DEBUG):
         # Compose with a Session obj
-        self.bigip_icr_uri = bigip_icr_uri
         self.session = requests.Session()
 
         # Configure with passed parameters
@@ -251,7 +236,7 @@ class iControlRESTSession(object):
         self.session.headers.update({'Content-Type': 'application/json'})
 
         # Set new state not specified in callers
-        self.log_level = log_level
+        self.log_level = loglevel
         self.log_dir = self._make_log_dir()
 
     def _make_log_dir(self):
