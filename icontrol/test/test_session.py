@@ -15,7 +15,7 @@
 import mock
 import pytest
 
-from icontrolREST import session
+from icontrol import session
 
 
 @pytest.fixture()
