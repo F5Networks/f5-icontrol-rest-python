@@ -25,6 +25,16 @@ if 'PROJECT_DIR' in os.environ:
 else:
     project_dir = os.path.curdir
 
+if 'RELEASE' in os.environ:
+    release = os.environ['RELEASE']
+elif os.path.isfile('RELEASE'):
+    release_file = open('RELEASE', 'r')
+    release = release_file.read()
+    release = release.strip()
+    release_file.close()
+else:
+    release = 'Unknown'
+
 if 'bdist_deb' in sys.argv:
     stdebcfg = open('stdeb.cfg', 'w')
     stdebcfg.write('[DEFAULT]\n')
