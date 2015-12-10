@@ -223,7 +223,12 @@ class iControlRESTSession(object):
 
     XXXX
     """
-    def __init__(self, username, password, timeout=30, loglevel=logging.DEBUG):
+    def __init__(self, username, password, **kwargs):
+        timeout = kwargs.pop('timeout', 30)
+        loglevel = kwargs.pop('loglevel', logging.DEBUG)
+        if kwargs:
+            raise TypeError('Unexpected **kwargs: %r' % kwargs)
+
         # Compose with a Session obj
         self.session = requests.Session()
 
