@@ -15,56 +15,28 @@
 # limitations under the License.
 #
 
-import os
-import sys
+from setuptools import setup
 
-from distutils.core import setup
+import icontrol
 
-if 'PROJECT_DIR' in os.environ:
-    project_dir = os.environ['PROJECT_DIR']
-else:
-    project_dir = os.path.curdir
-
-if 'RELEASE' in os.environ:
-    release = os.environ['RELEASE']
-elif os.path.isfile('RELEASE'):
-    release_file = open('RELEASE', 'r')
-    release = release_file.read()
-    release = release.strip()
-    release_file.close()
-else:
-    release = 'Unknown'
-
-if 'bdist_deb' in sys.argv:
-    stdebcfg = open('stdeb.cfg', 'w')
-    stdebcfg.write('[DEFAULT]\n')
-    stdebcfg.write('Package: f5-bigip-common\n')
-    stdebcfg.write('Debian-Version: ' + release + '\n')
-    stdebcfg.write('Depends: python-suds\n')
-    stdebcfg.close()
-
-if 'bdist_rpm' in sys.argv:
-    setupcfg = open('setup.cfg', 'w')
-    setupcfg.write('[bdist_rpm]\n')
-    setupcfg.write('release=%s\n' % release)
-    setupcfg.write('requires=python-suds > 0.3\n')
-    setupcfg.close()
+def readme():
+    with open('README.md') as f:
+        return f.read()
 
 setup(name='f5-icontrol-rest',
-      description='F5 Python REST client',
-      long_description='F5 Python REST client',
+      description='F5 BIG-IP iControl REST API client',
+      long_description=readme(),
       license='Apache License, Version 2.0',
-      version='1.0.0',
+      version=icontrol.__version__,
       author='F5 DevCentral',
-      author_email='devcentral@f5.com',
-      url='http://devcentral.f5.com/openstack',
+      author_email='f5-icontrol-rest-python@f5.com',
+      url='https://github.com/F5Networks/f5-icontrol-rest-python',
       py_modules=[
                   'icontrol.session',
       ],
       packages=['icontrol'],
       classifiers=['Development Status :: 5 - Production/Stable',
                    'License :: OSI Approved :: Apache Software License',
-                   'Environment :: OpenStack',
                    'Operating System :: OS Independent',
                    'Programming Language :: Python',
                    'Intended Audience :: System Administrators']
