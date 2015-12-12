@@ -132,7 +132,7 @@ def _validate_uri_parts(base_uri, folder, instance_name, suffix_collections):
     return True
 
 
-def generate_bigip_uri(base_uri, folder, instance_name, **kwargs):
+def generate_bigip_uri(base_uri, folder, instance_name, suffix, **kwargs):
     '''(str, str, str) --> str
 
     This function checks the supplied elements to see if each conforms to
@@ -151,20 +151,19 @@ def generate_bigip_uri(base_uri, folder, instance_name, **kwargs):
             params={'a':1}, suffix='/thwocky')
     'https://0.0.0.0/mgmt/tm/ltm/nat/thwocky'
     '''
-    suffix_collections = kwargs.pop('suffix', '')
-    _validate_uri_parts(base_uri, instance_name, folder, suffix_collections)
+    _validate_uri_parts(base_uri, instance_name, folder, suffix)
     if folder != '':
         folder = '~'+folder
     if instance_name != '':
         instance_name = '~'+instance_name
     tilded_folder_and_instance = folder+instance_name
-    if suffix_collections and not tilded_folder_and_instance:
-        suffix_collections = suffix_collections.lstrip('/')
-    REST_uri = base_uri + tilded_folder_and_instance + suffix_collections
+    if suffix and not tilded_folder_and_instance:
+        suffix = suffix.lstrip('/')
+    REST_uri = base_uri + tilded_folder_and_instance + suffix
     return REST_uri
 
 
-def _config_logging(logdir, methodname, level, cls_name, **kwargs):
+def _config_logging(logdir, methodname, level, cls_name):
     # Configure output handler for the HTTP method's log
     log_path = os.path.join(logdir, methodname)
     logfile_handler = logging.FileHandler(log_path)
@@ -178,9 +177,9 @@ def _config_logging(logdir, methodname, level, cls_name, **kwargs):
 
 
 def _log_HTTP_verb_method_precall(logger, methodname, level, cls_name,
-                                  request_uri, **kwargs):
-    pre_message = "%s.%s WITH uri: %s AND kwargs: %s" %\
-        (cls_name, methodname, request_uri, kwargs)
+                                  request_uri, suffix, **kwargs):
+    pre_message = "%s.%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
+        (cls_name, methodname, request_uri, suffix, kwargs)
     logger.log(level, pre_message)
 
 
@@ -198,13 +197,14 @@ def decorate_HTTP_verb_method(method):
     @functools.wraps(method)
     def wrapper(self, RIC_base_uri, folder='', instance_name='',
                 **kwargs):
+        suffix = kwargs.pop('suffix', '')
         REST_uri = generate_bigip_uri(RIC_base_uri, folder, instance_name,
-                                      **kwargs)
+                                      suffix, **kwargs)
         logger = _config_logging(self.log_dir, method.__name__, self.log_level,
-                                 self.__class__.__name__, **kwargs)
+                                 self.__class__.__name__)
         _log_HTTP_verb_method_precall(logger, method.__name__,
                                       self.log_level, self.__class__.__name__,
-                                      REST_uri, **kwargs)
+                                      REST_uri, suffix, **kwargs)
         response = method(self, REST_uri, **kwargs)
         _log_HTTP_verb_method_postcall(logger, self.log_level, response)
         response.raise_for_status()
