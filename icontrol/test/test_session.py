@@ -147,8 +147,9 @@ def test_correct_uri_construction_nameless_and_suffixless(uparts):
 
 # Test exception handling
 def test_wrapped_delete_success(iCRS, uparts):
-    iCRS.delete(uparts['base_uri'], 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
-
+    iCRS.delete(uparts['base_uri'], 'AFN', 'AIN')
+    assert iCRS.session.delete.call_args ==\
+            mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN')
 
 def test_wrapped_delete_207_fail(iCRS, uparts):
     iCRS.session.delete.return_value.status_code = 207
@@ -176,7 +177,9 @@ def test_wrapped_get_207_fail(iCRS, uparts):
 
 
 def test_wrapped_patch_success(iCRS, uparts):
-    iCRS.patch(uparts['base_uri'], 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+    iCRS.patch(uparts['base_uri'], 'AFN', 'AIN')
+    assert iCRS.session.patch.call_args ==\
+            mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN', None)
 
 
 def test_wrapped_patch_207_fail(iCRS, uparts):
