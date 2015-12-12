@@ -179,8 +179,11 @@ def test_wrapped_patch_207_fail(iCRS, uparts):
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
-def test_wrapped_post_success(iCRS, uparts):
-    iCRS.post(uparts['base_uri'], 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+def test_wrapped_put_207_fail(iCRS, uparts):
+    iCRS.session.put.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
+        iCRS.put(uparts['base_uri'], 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+    assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_post_207_fail(iCRS, uparts):
@@ -190,12 +193,41 @@ def test_wrapped_post_207_fail(iCRS, uparts):
     assert CHE.value.message.startswith('207 Unexpected Error: ')
 
 
+def test_wrapped_post_success(iCRS, uparts):
+    iCRS.post(uparts['base_uri'], 'AFN', 'AIN')
+    assert iCRS.session.post.call_args ==\
+        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN')
+
+
+def test_wrapped_post_success_with_data(iCRS, uparts):
+    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', data={'a':1})
+    assert iCRS.session.post.call_args ==\
+        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
+            data={'a':1})
+
+
+def test_wrapped_post_success_with_json(iCRS, uparts):
+    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', json='{"a":1}')
+    assert iCRS.session.post.call_args ==\
+        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
+            json='{"a":1}')
+
+
+def test_wrapped_post_success_with_json_and_data(iCRS, uparts):
+    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', data={'a':1}, json='{"a":1}')
+    assert iCRS.session.post.call_args ==\
+        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
+                data={'a':1}, json='{"a":1}')
+
+
 def test_wrapped_put_success(iCRS, uparts):
-    iCRS.put(uparts['base_uri'], 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+    iCRS.put(uparts['base_uri'], 'AFN', 'AIN')
+    assert iCRS.session.put.call_args ==\
+        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN')
 
 
-def test_wrapped_put_207_fail(iCRS, uparts):
-    iCRS.session.put.return_value.status_code = 207
-    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
-        iCRS.put(uparts['base_uri'], 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
-    assert CHE.value.message.startswith('207 Unexpected Error: ')
+def test_wrapped_put_success_with_data(iCRS, uparts):
+    iCRS.put(uparts['base_uri'], 'AFN', 'AIN', data={'b':2})
+    assert iCRS.session.put.call_args ==\
+            mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
+                      data={'b':2})
