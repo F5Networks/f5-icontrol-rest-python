@@ -158,7 +158,14 @@ def test_wrapped_delete_207_fail(iCRS, uparts):
 
 
 def test_wrapped_get_success(iCRS, uparts):
-    iCRS.get(uparts['base_uri'], 'A_FOLDER_NAME', 'AN_INSTANCE_NAME')
+    iCRS.get(uparts['base_uri'], 'AFN', 'AIN')
+    assert iCRS.session.get.call_args ==\
+        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN')
+
+def test_wrapped_get_success_with_suffix(iCRS, uparts):
+    iCRS.get(uparts['base_uri'], 'AFN', 'AIN', suffix=uparts['suffix'])
+    assert iCRS.session.get.call_args ==\
+        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN/members/m1')
 
 
 def test_wrapped_get_207_fail(iCRS, uparts):
@@ -231,4 +238,4 @@ def test_wrapped_put_success_with_data(iCRS, uparts):
     iCRS.put(uparts['base_uri'], 'AFN', 'AIN', data={'b':2})
     assert iCRS.session.put.call_args ==\
             mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
-                      {'b':2})
+                    {'b':2})
