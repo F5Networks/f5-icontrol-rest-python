@@ -29,16 +29,21 @@ setup(name='f5-icontrol-rest',
       long_description=readme(),
       license='Apache License, Version 2.0',
       version=icontrol.__version__,
-      author='F5 DevCentral',
+      author='F5 Networks',
       author_email='f5-icontrol-rest-python@f5.com',
       url='https://github.com/F5Networks/f5-icontrol-rest-python',
+      install_requires=[
+          'requests',
+      ],
       py_modules=[
-                  'icontrol.session',
+          'icontrol.session',
       ],
       packages=['icontrol'],
-      classifiers=['Development Status :: 5 - Production/Stable',
-                   'License :: OSI Approved :: Apache Software License',
-                   'Operating System :: OS Independent',
-                   'Programming Language :: Python',
-                   'Intended Audience :: System Administrators']
+      classifiers=[
+          'Development Status :: 5 - Production/Stable',
+          'License :: OSI Approved :: Apache Software License',
+          'Operating System :: OS Independent',
+          'Programming Language :: Python',
+          'Intended Audience :: System Administrators',
+      ]
       )
