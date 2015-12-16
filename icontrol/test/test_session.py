@@ -44,9 +44,7 @@ def uparts():
 # Test invalid args
 def test_iCRS_with_invalid_construction():
     with pytest.raises(TypeError) as UTE:
-        iCRS_fake = session.iControlRESTSession('admin', 'admin', what='foble')
-    print dir(UTE.value)
-    print "****"+repr(UTE.value.message)
+        session.iControlRESTSession('admin', 'admin', what='foble')
     assert UTE.value.message == "Unexpected **kwargs: {'what': 'foble'}"
 
 
