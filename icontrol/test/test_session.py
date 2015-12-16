@@ -41,6 +41,15 @@ def uparts():
     return parts_dict
 
 
+# Test invalid args
+def test_iCRS_with_invalid_construction():
+    with pytest.raises(TypeError) as UTE:
+        iCRS_fake = session.iControlRESTSession('admin', 'admin', what='foble')
+    print dir(UTE.value)
+    print "****"+repr(UTE.value.message)
+    assert UTE.value.message == "Unexpected **kwargs: {'what': 'foble'}"
+
+
 # Test uri component validation
 def test_incorrect_uri_construction_bad_scheme(uparts):
     uparts['base_uri'] = 'hryttps://0.0.0.0/mgmt/tm/root/RESTiface/'
