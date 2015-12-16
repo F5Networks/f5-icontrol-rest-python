@@ -262,12 +262,12 @@ class iControlRESTSession(object):
 
     @decorate_HTTP_verb_method
     def patch(self, uri, data=None, **kwargs):
-        return self.session.patch(uri, data, **kwargs)
+        return self.session.patch(uri, data=data, **kwargs)
 
     @decorate_HTTP_verb_method
     def post(self, uri, data=None, json=None, **kwargs):
-        return self.session.post(uri, data, json, **kwargs)
+        return self.session.post(uri, data=data, json=json, **kwargs)
 
     @decorate_HTTP_verb_method
     def put(self, uri, data=None, **kwargs):
-        return self.session.put(uri, data, **kwargs)
+        return self.session.put(uri, data=data, **kwargs)
