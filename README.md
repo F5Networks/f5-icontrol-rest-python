@@ -17,15 +17,16 @@ limitations under the License.
 [![Build Status](https://travis-ci.com/F5Networks/f5-icontrol-rest-python.svg?token=2gRRgdSNRf2z9jAftSpV)](https://travis-ci.com/F5Networks/f5-icontrol-rest-python)
 
 ## Introduction
-Generic python library that allows programs and other modules to interact with the BIG-IP iControl REST API.
+This generic python library allows programs and other modules to interact with the BIG-IP iControl REST API.
 
 ## Installation
-You can install this package using pip.
+### Using Pip
 ```bash
 pip install f5-icontrol-rest
 ```
 
-If you want to install directly from github you can do so as well.  The example below installs the package at the release v0.1.0 tag.
+### Installing directly from GitHub
+*Note:* This will install the package at release v0.1.0.
 ```bash
 pip install git+ssh://git@github.com/F5Networks/f5-icontrol-rest@v0.1.0`
 ```
@@ -44,7 +45,8 @@ icr_session.get(
 ```
 
 ## Documentation
-TODO: Point to the API docs
+See [Documentation](http://f5-icontrol-rest-python.github.io)
+
 
 ## Filing Issues
 TODO: How to file bugs vs enhancements
@@ -53,20 +55,20 @@ TODO: How to file bugs vs enhancements
 See [Contributing](CONTRIBUTING.md)
 
 ## Build
-To make a py-pi package run:
+To make a PyPI package...
 ```bash
 python setup.py sdist
 ```
 
 ## Test
-All code must have passing [pytest](http://pytest.org) unit tests prior to
-submitting a pull request.  In addition there should be a set of functional
-tests that are written to use a real BIG-IP device for testing.  Below is
-information on how to run our various tests.
+Before you open a pull request, your code must have passing
+[pytest](http://pytest.org) unit tests. In addition, you should include a set of
+functional tests written to use a real BIG-IP device for testing. Information on
+how to run our set of tests is included below.
 
 #### Unit Tests
 We use pytest for our unit tests
-1. If you haven't already install the required test packages and the requirements.txt in your virtual environment.
+1. If you haven't already, install the required test packages and the requirements.txt in your virtual environment.
 ```shell
 $ pip install hacking pytest pytest-cov
 $ pip install -r requirements.txt
@@ -80,8 +82,8 @@ open htmlcov/index.html
 ```
 
 #### Style Checks
-We use the hacking module for our style checks that you installed as part of
-step 1 in the Unit Test section above.
+We use the hacking module for our style checks (installed as part of
+step 1 in the Unit Test section).
 ```shell
 flake8 ./
 ```
