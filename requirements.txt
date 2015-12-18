@@ -1,0 +1,6 @@
+requests
+
+# Test Requirements
+pytest
+pytest-coverage
+hacking
