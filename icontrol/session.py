@@ -48,12 +48,12 @@ class InvalidPrefixCollection(BigIPInvalidURL):
 
 
 class InvalidInstanceNameOrFolder(BigIPInvalidURL):
-    # instance names and folders must not contain the '~' or '/' chars
+    # instance names and partitions must not contain the '~' or '/' chars
     pass
 
 
 class InvalidSuffixCollection(BigIPInvalidURL):
-    # must start with a '/' since there may be a folder or name before it
+    # must start with a '/' since there may be a partition or name before it
     pass
 
 
@@ -72,7 +72,7 @@ def _validate_icruri(base_uri):
 
 def _validate_prefix_collections(prefix_collections):
     # The prefix collections are everything in the URI after /mgmt/tm/ and
-    # before the 'folder'  It must not start with '/' because it's relative
+    # before the 'partition'  It must not start with '/' because it's relative
     # to the /mgmt/tm REST management path, and it must end with '/' since the
     # subequent components expect to be addressed relative to it.
     # Additionally the first '/' delimited component of the prefix collection
@@ -86,26 +86,26 @@ def _validate_prefix_collections(prefix_collections):
     return True
 
 
-def _validate_instance_name_or_folder(inst_or_folder):
+def _validate_name_or_partition(inst_or_partition):
     # '/' and '~' are illegal characters
-    if inst_or_folder == '':
+    if inst_or_partition == '':
         return True
-    if '~' in inst_or_folder:
+    if '~' in inst_or_partition:
         error_message =\
-            "instance names and folders cannot contain '~', but it's: %s"\
-            % inst_or_folder
+            "instance names and partitions cannot contain '~', but it's: %s"\
+            % inst_or_partition
         raise InvalidInstanceNameOrFolder(error_message)
-    elif '/' in inst_or_folder:
+    elif '/' in inst_or_partition:
         error_message =\
-            "instance names and folders cannot contain '/', but it's: %s"\
-            % inst_or_folder
+            "instance names and partitions cannot contain '/', but it's: %s"\
+            % inst_or_partition
         raise InvalidInstanceNameOrFolder(error_message)
     return True
 
 
 def _validate_suffix_collections(suffix_collections):
     # These collections must startwith '/' since they may come after a name
-    # and/or folder and I do not know whether '~folder~name/' is a legal
+    # and/or partition and I do not know whether '~partition~name/' is a legal
     # ending for a URI.
     # The suffix must not endwith '/' as it is the last component that can
     # be appended to the URI path.
@@ -122,17 +122,17 @@ def _validate_suffix_collections(suffix_collections):
     return True
 
 
-def _validate_uri_parts(base_uri, folder, instance_name, suffix_collections):
+def _validate_uri_parts(base_uri, partition, name, suffix_collections):
     # Apply the above validators to the correct components.
     _validate_icruri(base_uri)
-    _validate_instance_name_or_folder(folder)
-    _validate_instance_name_or_folder(instance_name)
+    _validate_name_or_partition(partition)
+    _validate_name_or_partition(name)
     if suffix_collections:
         _validate_suffix_collections(suffix_collections)
     return True
 
 
-def generate_bigip_uri(base_uri, folder, instance_name, suffix, **kwargs):
+def generate_bigip_uri(base_uri, partition, name, suffix, **kwargs):
     '''(str, str, str) --> str
 
     This function checks the supplied elements to see if each conforms to
@@ -151,15 +151,15 @@ def generate_bigip_uri(base_uri, folder, instance_name, suffix, **kwargs):
             params={'a':1}, suffix='/thwocky')
     'https://0.0.0.0/mgmt/tm/ltm/nat/thwocky'
     '''
-    _validate_uri_parts(base_uri, instance_name, folder, suffix)
-    if folder != '':
-        folder = '~'+folder
-    if instance_name != '':
-        instance_name = '~'+instance_name
-    tilded_folder_and_instance = folder+instance_name
-    if suffix and not tilded_folder_and_instance:
+    _validate_uri_parts(base_uri, name, partition, suffix)
+    if partition != '':
+        partition = '~'+partition
+    if name != '':
+        name = '~'+name
+    tilded_partition_and_instance = partition+name
+    if suffix and not tilded_partition_and_instance:
         suffix = suffix.lstrip('/')
-    REST_uri = base_uri + tilded_folder_and_instance + suffix
+    REST_uri = base_uri + tilded_partition_and_instance + suffix
     return REST_uri
 
 
@@ -195,10 +195,10 @@ def _log_HTTP_verb_method_postcall(logger, level, response):
 def decorate_HTTP_verb_method(method):
     # NOTE:  "self" refers to a RESTInterfaceCollection instance!
     @functools.wraps(method)
-    def wrapper(self, RIC_base_uri, folder='', instance_name='',
+    def wrapper(self, RIC_base_uri, partition='', name='',
                 **kwargs):
         suffix = kwargs.pop('suffix', '')
-        REST_uri = generate_bigip_uri(RIC_base_uri, folder, instance_name,
+        REST_uri = generate_bigip_uri(RIC_base_uri, partition, name,
                                       suffix, **kwargs)
         logger = _config_logging(self.log_dir, method.__name__, self.log_level,
                                  self.__class__.__name__)
