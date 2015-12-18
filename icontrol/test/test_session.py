@@ -35,8 +35,8 @@ def iCRS():
 @pytest.fixture()
 def uparts():
     parts_dict = {'base_uri': 'https://0.0.0.0/mgmt/tm/root/RESTiface/',
-                  'folder': 'BIGCUSTOMER',
-                  'instance_name': 'foobar1',
+                  'partition': 'BIGCUSTOMER',
+                  'name': 'foobar1',
                   'suffix': '/members/m1'}
     return parts_dict
 
@@ -73,21 +73,21 @@ def test_incorrect_uri_construction_bad_base_nonslash_last(uparts):
     assert IR.value.message == test_value
 
 
-def test_incorrect_uri_construction_illegal_slash_folder_char(uparts):
-    uparts['folder'] = 'spam/ham'
+def test_incorrect_uri_construction_illegal_slash_partition_char(uparts):
+    uparts['partition'] = 'spam/ham'
     with pytest.raises(session.InvalidInstanceNameOrFolder) as II:
         session.generate_bigip_uri(**uparts)
-    test_value = "instance names and folders cannot contain '/', but it's: %s"\
-                 % uparts['folder']
+    test_value = "instance names and partitions cannot contain '/', but" +\
+        " it's: %s" % uparts['partition']
     assert II.value.message == test_value
 
 
-def test_incorrect_uri_construction_illegal_tilde_folder_char(uparts):
-    uparts['folder'] = 'spam~ham'
+def test_incorrect_uri_construction_illegal_tilde_partition_char(uparts):
+    uparts['partition'] = 'spam~ham'
     with pytest.raises(session.InvalidInstanceNameOrFolder) as II:
         session.generate_bigip_uri(**uparts)
-    test_value = "instance names and folders cannot contain '~', but it's: %s"\
-                 % uparts['folder']
+    test_value = "instance names and partitions cannot contain '~', but" +\
+        " it's: %s" % uparts['partition']
     assert II.value.message == test_value
 
 
@@ -110,43 +110,43 @@ def test_incorrect_uri_construction_illegal_suffix_slash_last(uparts):
 
 
 # Test uri construction
-def test_correct_uri_construction_folderless(uparts):
-    uparts['folder'] = ''
+def test_correct_uri_construction_partitionless(uparts):
+    uparts['partition'] = ''
     uri = session.generate_bigip_uri(**uparts)
     assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~foobar1/members/m1'
 
 
 def test_correct_uri_construction_nameless(uparts):
-    uparts['instance_name'] = ''
+    uparts['name'] = ''
     uri = session.generate_bigip_uri(**uparts)
     assert uri ==\
         "https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER/members/m1"
 
 
-def test_correct_uri_construction_folderless_and_nameless(uparts):
-    uparts['folder'] = ''
-    uparts['instance_name'] = ''
+def test_correct_uri_construction_partitionless_and_nameless(uparts):
+    uparts['partition'] = ''
+    uparts['name'] = ''
     uri = session.generate_bigip_uri(**uparts)
     assert uri == "https://0.0.0.0/mgmt/tm/root/RESTiface/members/m1"
 
 
-def test_correct_uri_construction_folder_name_and_suffixless(uparts):
-    uparts['folder'] = ''
-    uparts['instance_name'] = ''
+def test_correct_uri_construction_partition_name_and_suffixless(uparts):
+    uparts['partition'] = ''
+    uparts['name'] = ''
     uparts['suffix'] = ''
     uri = session.generate_bigip_uri(**uparts)
     assert uri == "https://0.0.0.0/mgmt/tm/root/RESTiface/"
 
 
-def test_correct_uri_construction_folderless_and_suffixless(uparts):
-    uparts['folder'] = ''
+def test_correct_uri_construction_partitionless_and_suffixless(uparts):
+    uparts['partition'] = ''
     uparts['suffix'] = ''
     uri = session.generate_bigip_uri(**uparts)
     assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~foobar1'
 
 
 def test_correct_uri_construction_nameless_and_suffixless(uparts):
-    uparts['instance_name'] = ''
+    uparts['name'] = ''
     uparts['suffix'] = ''
     uri = session.generate_bigip_uri(**uparts)
     assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER'
