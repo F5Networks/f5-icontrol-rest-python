@@ -154,7 +154,7 @@ def test_correct_uri_construction_nameless_and_suffixless(uparts):
 
 # Test exception handling
 def test_wrapped_delete_success(iCRS, uparts):
-    iCRS.delete(uparts['base_uri'], 'AFN', 'AIN')
+    iCRS.delete(uparts['base_uri'], 'AFN', 'AIN', uri_as_parts=True)
     assert iCRS.session.delete.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN')
 
@@ -167,13 +167,14 @@ def test_wrapped_delete_207_fail(iCRS, uparts):
 
 
 def test_wrapped_get_success(iCRS, uparts):
-    iCRS.get(uparts['base_uri'], 'AFN', 'AIN')
+    iCRS.get(uparts['base_uri'], 'AFN', 'AIN', uri_as_parts=True)
     assert iCRS.session.get.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN')
 
 
 def test_wrapped_get_success_with_suffix(iCRS, uparts):
-    iCRS.get(uparts['base_uri'], 'AFN', 'AIN', suffix=uparts['suffix'])
+    iCRS.get(uparts['base_uri'], 'AFN', 'AIN', suffix=uparts['suffix'],
+             uri_as_parts=True)
     assert iCRS.session.get.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN/members/m1')
 
@@ -186,7 +187,7 @@ def test_wrapped_get_207_fail(iCRS, uparts):
 
 
 def test_wrapped_patch_success(iCRS, uparts):
-    iCRS.patch(uparts['base_uri'], 'AFN', 'AIN')
+    iCRS.patch(uparts['base_uri'], 'AFN', 'AIN', uri_as_parts=True)
     assert iCRS.session.patch.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN', data=None)
 
@@ -213,41 +214,45 @@ def test_wrapped_post_207_fail(iCRS, uparts):
 
 
 def test_wrapped_post_success(iCRS, uparts):
-    iCRS.post(uparts['base_uri'], 'AFN', 'AIN')
+    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', uri_as_parts=True)
     assert iCRS.session.post.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN', data=None,
                   json=None)
 
 
 def test_wrapped_post_success_with_data(iCRS, uparts):
-    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', data={'a': 1})
+    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', data={'a': 1},
+              uri_as_parts=True)
     assert iCRS.session.post.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
                   data={'a': 1}, json=None)
 
 
 def test_wrapped_post_success_with_json(iCRS, uparts):
-    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', json='{"a": 1}')
+    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', json='{"a": 1}',
+              uri_as_parts=True)
     assert iCRS.session.post.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN', data=None,
                   json='{"a": 1}')
 
 
 def test_wrapped_post_success_with_json_and_data(iCRS, uparts):
-    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', data={'a': 1}, json='{"a": 1}')
+    iCRS.post(uparts['base_uri'], 'AFN', 'AIN', data={'a': 1}, json='{"a": 1}',
+              uri_as_parts=True)
     assert iCRS.session.post.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
                   data={'a': 1}, json='{"a": 1}')
 
 
 def test_wrapped_put_success(iCRS, uparts):
-    iCRS.put(uparts['base_uri'], 'AFN', 'AIN')
+    iCRS.put(uparts['base_uri'], 'AFN', 'AIN', uri_as_parts=True)
     assert iCRS.session.put.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN', data=None)
 
 
 def test_wrapped_put_success_with_data(iCRS, uparts):
-    iCRS.put(uparts['base_uri'], 'AFN', 'AIN', data={'b': 2})
+    iCRS.put(uparts['base_uri'], 'AFN', 'AIN', data={'b': 2},
+             uri_as_parts=True)
     assert iCRS.session.put.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
                   data={'b': 2})
