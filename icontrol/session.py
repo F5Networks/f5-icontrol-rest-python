@@ -195,8 +195,9 @@ def _log_HTTP_verb_method_postcall(logger, level, response):
 def decorate_HTTP_verb_method(method):
     # NOTE:  "self" refers to a RESTInterfaceCollection instance!
     @functools.wraps(method)
-    def wrapper(self, RIC_base_uri, partition='', name='',
-                **kwargs):
+    def wrapper(self, RIC_base_uri, **kwargs):
+        partition = kwargs.pop('partition', '')
+        name = kwargs.pop('name', '')
         suffix = kwargs.pop('suffix', '')
         uri_as_parts = kwargs.pop('uri_as_parts', False)
         if uri_as_parts:
