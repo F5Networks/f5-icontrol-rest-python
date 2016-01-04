@@ -195,11 +195,16 @@ def _log_HTTP_verb_method_postcall(logger, level, response):
 def decorate_HTTP_verb_method(method):
     # NOTE:  "self" refers to a RESTInterfaceCollection instance!
     @functools.wraps(method)
-    def wrapper(self, RIC_base_uri, partition='', name='',
-                **kwargs):
+    def wrapper(self, RIC_base_uri, **kwargs):
+        partition = kwargs.pop('partition', '')
+        name = kwargs.pop('name', '')
         suffix = kwargs.pop('suffix', '')
-        REST_uri = generate_bigip_uri(RIC_base_uri, partition, name,
-                                      suffix, **kwargs)
+        uri_as_parts = kwargs.pop('uri_as_parts', False)
+        if uri_as_parts:
+            REST_uri = generate_bigip_uri(RIC_base_uri, partition, name,
+                                          suffix, **kwargs)
+        else:
+            REST_uri = RIC_base_uri
         logger = _config_logging(self.log_dir, method.__name__, self.log_level,
                                  self.__class__.__name__)
         _log_HTTP_verb_method_precall(logger, method.__name__,
@@ -228,6 +233,7 @@ class iControlRESTSession(object):
         loglevel = kwargs.pop('loglevel', logging.DEBUG)
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
+        requests.packages.urllib3.disable_warnings()
 
         # Compose with a Session obj
         self.session = requests.Session()
