@@ -1,4 +1,4 @@
-requests
+requests >= 2.9.1
 
 # Test Requirements
 pytest
