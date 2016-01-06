@@ -185,10 +185,11 @@ def _log_HTTP_verb_method_precall(logger, methodname, level, cls_name,
 
 def _log_HTTP_verb_method_postcall(logger, level, response):
     post_message = "RESPONSE::STATUS:" +\
-                   " %s Content-Type: %s Content-Encoding: %s" %\
+                   " %s Content-Type: %s Content-Encoding: %s\nText: %r" %\
         (response.status_code,
          response.headers.get('Content-Type', None),
-         response.headers.get('Content-Encoding', None))
+         response.headers.get('Content-Encoding', None),
+         response.text)
     logger.log(level, post_message)
 
 
@@ -212,12 +213,12 @@ def decorate_HTTP_verb_method(method):
                                       REST_uri, suffix, **kwargs)
         response = method(self, REST_uri, **kwargs)
         _log_HTTP_verb_method_postcall(logger, self.log_level, response)
-        response.raise_for_status()
         if response.status_code not in range(200, 207):
-            error_message = '%s Unexpected Error: %s for uri: %s' %\
+            error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
                             (response.status_code,
                              response.reason,
-                             response.uri)
+                             response.url,
+                             response.text)
             raise iControlUnexpectedHTTPError(error_message, response=response)
         return response
     return wrapper
