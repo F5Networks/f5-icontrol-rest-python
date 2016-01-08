@@ -11,6 +11,41 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+"""A BigIP-RESTServer URI handler. REST-APIs use it on the requests library.
+
+Use this module to make calls to a BigIP-REST server.  It will handle:
+1. uri sanitization:  uri's produced by this module are checked to ensure
+compliance with the BigIP-REST server interface
+2. session construction: the iControlRESTSession wraps a requests.Session
+object.
+3. logging: pre- and post- request state is logged.
+4. exception generation: Errors in URL construction generate "BigIPInvalidURL"
+subclasses; unexpected HTTP status codes raise iControlUnexpectedHTTPErrors
+
+The core functionality of the module is implemented via the iControlRESTSEssion
+class.  Calls to its' HTTP-methods are checked, pre-logged, submitted, and
+post-logged.
+
+There are 2 modes of operation "full_uri", and "uri_as_parts", toggled by the
+`uri_as_parts` boolean keyword param that can be passed to methods. It defaults
+to `False`.   Use `uri_as_parts` when you want to leverage the full
+functionality of this library, and have it construct your uri for you.
+Example Use in `uri_as_parts` mode:
+  iCRS = iControlRESTSession('jrandomhacker', 'insecure')
+  iCRS.get('https://VALIDDOMAINORADDRESS/mgmt/tm/ltm/nat/', partition='Common',
+           name='VALIDNAME', uri_as_parts=True)
+In `full_uri` mode:
+  iCRS.get('https://VALIDDOMAINORADDRESS/mgmt/tm/ltm/nat/~Common~VALIDNAME')
+
+NOTE: If used via the f5-common-python library the typical mode is "full_uri"
+since that library binds uris to Python objects.
+
+Available functions:
+
+- iCRS.{get, post, put, delete, patch}: requests.Session.VERB wrappers
+- decorate_HTTP_verb_method: this function preps, logs, and handles requests
+against the BigIP REST Server, by pre- and post- processing the above methods.
+"""
 
 import functools
 import logging
@@ -178,12 +213,14 @@ def _config_logging(logdir, methodname, level, cls_name):
 
 def _log_HTTP_verb_method_precall(logger, methodname, level, cls_name,
                                   request_uri, suffix, **kwargs):
+    # Helper used by decorate_HTTP_verb_method.
     pre_message = "%s.%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
         (cls_name, methodname, request_uri, suffix, kwargs)
     logger.log(level, pre_message)
 
 
 def _log_HTTP_verb_method_postcall(logger, level, response):
+    # Helper used by decorate_HTTP_verb_method.
     post_message = "RESPONSE::STATUS:" +\
                    " %s Content-Type: %s Content-Encoding: %s\nText: %r" %\
         (response.status_code,
@@ -194,7 +231,19 @@ def _log_HTTP_verb_method_postcall(logger, level, response):
 
 
 def decorate_HTTP_verb_method(method):
-    # NOTE:  "self" refers to a RESTInterfaceCollection instance!
+    """Prepare and Post-Process HTTP VERB method for BigIP-RESTServer request.
+
+    This function decorates all of the HTTP VERB methods in the
+    iControlRESTSession class.  It provides the core logic for this module.
+    If necessary it validates and assembles a uri from parts with a call to
+    `generate_bigip_uri`.
+    Then it:
+    (1) pre-logs the details of the request
+    (2) submits the request
+    (3) logs the response, included expected status codes
+    (4) raises exceptions for unexpected status codes. (i.e. not doc'd as BigIP
+    RESTServer codes.)
+    """
     @functools.wraps(method)
     def wrapper(self, RIC_base_uri, **kwargs):
         partition = kwargs.pop('partition', '')
@@ -225,11 +274,25 @@ def decorate_HTTP_verb_method(method):
 
 
 class iControlRESTSession(object):
-    """XXX
+    """Represents a requests.Session that communicates with a BigIP-REST Server.
 
-    XXXX
+    Instantiate one of these when you want to communicate with a BigIP-REST
+    Server, it will handle BigIP-specific details of the uri's. In the
+    f5-common-python library, an iControlRESTSEssion is instantiated during
+    BigIP instantiation and associated with it as an attribute of the BigIP
+    (a compositional vs. inheritable association).
+
+    Objects instantiated from this class provide an HTTP 1.1 style session, via
+    the requests.Session object, and HTTP-methods that are specialized to the
+    BigIP-RESTServer interface.
     """
     def __init__(self, username, password, **kwargs):
+        """Instantiation associated with requests.Session via composition.
+
+        All transactions are Trust On First Use (TOFU) to the BigIP device,
+        since no PKI exists for this purpose in general, hence the
+        "disable_warnings" statement.
+        """
         timeout = kwargs.pop('timeout', 30)
         loglevel = kwargs.pop('loglevel', logging.DEBUG)
         if kwargs:
@@ -261,20 +324,25 @@ class iControlRESTSession(object):
 
     @decorate_HTTP_verb_method
     def delete(self, uri, **kwargs):
+        # See decorate_HTTP_verb_method, and the requests api.
         return self.session.delete(uri, **kwargs)
 
     @decorate_HTTP_verb_method
     def get(self, uri, **kwargs):
+        # See decorate_HTTP_verb_method, and the requests api.
         return self.session.get(uri, **kwargs)
 
     @decorate_HTTP_verb_method
     def patch(self, uri, data=None, **kwargs):
+        # See decorate_HTTP_verb_method, and the requests api.
         return self.session.patch(uri, data=data, **kwargs)
 
     @decorate_HTTP_verb_method
     def post(self, uri, data=None, json=None, **kwargs):
+        # See decorate_HTTP_verb_method, and the requests api.
         return self.session.post(uri, data=data, json=json, **kwargs)
 
     @decorate_HTTP_verb_method
     def put(self, uri, data=None, **kwargs):
+        # See decorate_HTTP_verb_method, and the requests api.
         return self.session.put(uri, data=data, **kwargs)
