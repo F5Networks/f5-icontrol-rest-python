@@ -24,12 +24,6 @@ Creating issues is good, creating good issues is even better.  By filing meaning
  in them helps us figure out what to fix when and how it impacts our users.  We like bugs because it means people are
  using our code, and we like fixing them even more.
  
-### Bugs
-TODO: What do we want in our bug reports and an example?
-
-### Feature Requests and Enhancements
-TODO: What do we want in our bug reports and an example?
-
 ## Pull Requests
 If you are submitting a pull request you need to make sure that you have done a few things first.
 
@@ -69,6 +63,21 @@ tests but the maintainers and consumers of this code appreciate the effort and
  If you are running our functional tests you will need a real BIG-IP to run
  them against, but you can get one of those pretty easily in [Amazon EC2](https://aws.amazon.com/marketplace/pp/B00JL3UASY/ref=srh_res_product_title?ie=UTF8&sr=0-10&qid=1449332167461).
 
-## Contributor License Agreement
-TODO: Need to get this from legal
-
+## License
+ 
+### Apache V2.0
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+ 
+http://www.apache.org/licenses/LICENSE-2.0
+ 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+ 
+### Contributor License Agreement
+Individuals or business entities who contribute to this project must have completed and submitted the [F5 Contributor License Agreement](http://f5networks.github.io/f5-openstack-docs/cla_landing/index.html) to Openstack_CLA@f5.com prior to their
+code submission being included in this project.
