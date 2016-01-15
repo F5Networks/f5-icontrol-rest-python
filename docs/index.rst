@@ -19,7 +19,7 @@ Using Pip
 +++++++++
 .. code-block:: bash
 
-    pip install icontrol
+    pip install f5-icontrol-rest
 
 GitHub
 ++++++
