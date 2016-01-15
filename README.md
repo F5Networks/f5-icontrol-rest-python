@@ -15,6 +15,8 @@ limitations under the License.
 -->
 # f5-icontrol-rest-python
 [![Build Status](https://travis-ci.com/F5Networks/f5-icontrol-rest-python.svg?token=2gRRgdSNRf2z9jAftSpV)](https://travis-ci.com/F5Networks/f5-icontrol-rest-python)
+[![Documentation Status](https://readthedocs.org/projects/icontrol/badge/?version=latest)](http://icontrol.readthedocs.org/en/latest/?badge=latest)
+
 
 ## Introduction
 This generic python library allows programs and other modules to interact with the BIG-IP iControl REST API.
@@ -45,7 +47,7 @@ icr_session.get(
 ```
 
 ## Documentation
-See [Documentation](http://f5-icontrol-rest-python.github.io)
+See [Documentation](http://icontrol.readthedocs.org)
 
 
 ## Filing Issues
