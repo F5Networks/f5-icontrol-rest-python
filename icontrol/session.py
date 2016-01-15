@@ -11,40 +11,50 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-"""A BigIP-RESTServer URI handler. REST-APIs use it on the requests library.
+"""A BigIP-RESTServer URI handler. REST-APIs use it on the :mod:`requests`
+library.
 
 Use this module to make calls to a BigIP-REST server.  It will handle:
-1. uri sanitization:  uri's produced by this module are checked to ensure
-compliance with the BigIP-REST server interface
-2. session construction: the iControlRESTSession wraps a requests.Session
-object.
-3. logging: pre- and post- request state is logged.
-4. exception generation: Errors in URL construction generate "BigIPInvalidURL"
-subclasses; unexpected HTTP status codes raise iControlUnexpectedHTTPErrors
 
-The core functionality of the module is implemented via the iControlRESTSEssion
-class.  Calls to its' HTTP-methods are checked, pre-logged, submitted, and
-post-logged.
+#. URI Sanitization uri's produced by this module are checked to ensure
+   compliance with the BigIP-REST server interface
+
+#. Session Construction -- the :class:`iControlRESTSession` wraps a
+   :class:`requests.Session` object.
+
+#. Logging -- pre- and post- request state is logged.
+
+#. Exception generation -- Errors in URL construction generate
+   :class:`BigIPInvalidURL` subclasses; unexpected HTTP status codes raise
+   :class:`iControlUnexpectedHTTPError`.
+
+The core functionality of the module is implemented via the
+:class:`iControlRESTSession` class.  Calls to its' HTTP-methods are checked,
+pre-logged, submitted, and post-logged.
 
 There are 2 modes of operation "full_uri", and "uri_as_parts", toggled by the
 `uri_as_parts` boolean keyword param that can be passed to methods. It defaults
 to `False`.   Use `uri_as_parts` when you want to leverage the full
 functionality of this library, and have it construct your uri for you.
 Example Use in `uri_as_parts` mode:
-  iCRS = iControlRESTSession('jrandomhacker', 'insecure')
-  iCRS.get('https://VALIDDOMAINORADDRESS/mgmt/tm/ltm/nat/', partition='Common',
-           name='VALIDNAME', uri_as_parts=True)
-In `full_uri` mode:
-  iCRS.get('https://VALIDDOMAINORADDRESS/mgmt/tm/ltm/nat/~Common~VALIDNAME')
 
-NOTE: If used via the f5-common-python library the typical mode is "full_uri"
-since that library binds uris to Python objects.
+>>> iCRS = iControlRESTSession('jrandomhacker', 'insecure')
+>>> iCRS.get('https://192.168.1.1/mgmt/tm/ltm/nat/', \
+partition='Common', name='VALIDNAME', uri_as_parts=True)
+
+In `full_uri` mode:
+
+>>> iCRS.get('https://192.168.1.1/mgmt/tm/ltm/nat/~Common~VALIDNAME')
+
+NOTE: If used via the :mod:`f5-common-python` library the typical mode is
+"full_uri" since that library binds uris to Python objects.
 
 Available functions:
 
 - iCRS.{get, post, put, delete, patch}: requests.Session.VERB wrappers
 - decorate_HTTP_verb_method: this function preps, logs, and handles requests
 against the BigIP REST Server, by pre- and post- processing the above methods.
+
 """
 
 import functools
@@ -176,14 +186,14 @@ def generate_bigip_uri(base_uri, partition, name, suffix, **kwargs):
     After validation the parts are assembled into a valid BigIP REST URI
     string which is then submitted with appropriate metadata.
 
-    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/',\
-            'CUSTOMER1', 'nat52', params={'a':1})
+    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/', \
+    'CUSTOMER1', 'nat52', params={'a':1})
     'https://0.0.0.0/mgmt/tm/ltm/nat/~CUSTOMER1~nat52'
-    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/',\
-            'CUSTOMER1', 'nat52', params={'a':1}, suffix='/wacky')
+    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/', \
+    'CUSTOMER1', 'nat52', params={'a':1}, suffix='/wacky')
     'https://0.0.0.0/mgmt/tm/ltm/nat/~CUSTOMER1~nat52/wacky'
-    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/', '', '',\
-            params={'a':1}, suffix='/thwocky')
+    >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/', '', '', \
+    params={'a':1}, suffix='/thwocky')
     'https://0.0.0.0/mgmt/tm/ltm/nat/thwocky'
     '''
     _validate_uri_parts(base_uri, name, partition, suffix)
@@ -237,12 +247,14 @@ def decorate_HTTP_verb_method(method):
     iControlRESTSession class.  It provides the core logic for this module.
     If necessary it validates and assembles a uri from parts with a call to
     `generate_bigip_uri`.
+
     Then it:
-    (1) pre-logs the details of the request
-    (2) submits the request
-    (3) logs the response, included expected status codes
-    (4) raises exceptions for unexpected status codes. (i.e. not doc'd as BigIP
-    RESTServer codes.)
+
+    1. pre-logs the details of the request
+    2. submits the request
+    3. logs the response, included expected status codes
+    4. raises exceptions for unexpected status codes. (i.e. not doc'd as BigIP
+       RESTServer codes.)
     """
     @functools.wraps(method)
     def wrapper(self, RIC_base_uri, **kwargs):
@@ -274,17 +286,17 @@ def decorate_HTTP_verb_method(method):
 
 
 class iControlRESTSession(object):
-    """Represents a requests.Session that communicates with a BigIP-REST Server.
+    """Represents a :class:`requests.Session` that communicates with a BigIP.
 
     Instantiate one of these when you want to communicate with a BigIP-REST
     Server, it will handle BigIP-specific details of the uri's. In the
-    f5-common-python library, an iControlRESTSEssion is instantiated during
-    BigIP instantiation and associated with it as an attribute of the BigIP
-    (a compositional vs. inheritable association).
+    f5-common-python library, an :class:`iControlRESTSession` is instantiated
+    during BigIP instantiation and associated with it as an attribute of the
+    BigIP (a compositional vs. inheritable association).
 
     Objects instantiated from this class provide an HTTP 1.1 style session, via
-    the requests.Session object, and HTTP-methods that are specialized to the
-    BigIP-RESTServer interface.
+    the :class:`requests.Session` object, and HTTP-methods that are specialized
+    to the BigIP-RESTServer interface.
     """
     def __init__(self, username, password, **kwargs):
         """Instantiation associated with requests.Session via composition.
@@ -324,25 +336,120 @@ class iControlRESTSession(object):
 
     @decorate_HTTP_verb_method
     def delete(self, uri, **kwargs):
-        # See decorate_HTTP_verb_method, and the requests api.
+        """Sends a HTTP DELETE command to the BIGIP REST Server.
+
+        Use this method to send a DELETE command to the BIGIP.  When calling
+        this method with the optional arguments ``name`` and ``partition``
+        as part of ``**kwargs`` they will be added to the ``uri`` passed
+        in separated by ~ to create a proper BIGIP REST API URL for objects.
+
+        All other parameters passed in as ``**kwargs`` are passed directly
+        to the :meth:`requests.Session.delete`
+
+        :param uri: A HTTP URI
+        :type uri: str
+        :param name: The object name that will be appended to the uri
+        :type name: str
+        :arg partition: The partition name that will be appened to the uri
+        :type partition: str
+        :param \**kwargs: The :meth:`reqeusts.Session.delete` optional params
+        """
         return self.session.delete(uri, **kwargs)
 
     @decorate_HTTP_verb_method
     def get(self, uri, **kwargs):
-        # See decorate_HTTP_verb_method, and the requests api.
+        """Sends a HTTP GET command to the BIGIP REST Server.
+
+        Use this method to send a GET command to the BIGIP.  When calling
+        this method with the optional arguments ``name`` and ``partition``
+        as part of ``**kwargs`` they will be added to the ``uri`` passed
+        in separated by ~ to create a proper BIGIP REST API URL for objects.
+
+        All other parameters passed in as ``**kwargs`` are passed directly
+        to the :meth:`requests.Session.get`
+
+        :param uri: A HTTP URI
+        :type uri: str
+        :param name: The object name that will be appended to the uri
+        :type name: str
+        :arg partition: The partition name that will be appened to the uri
+        :type partition: str
+        :param \**kwargs: The :meth:`reqeusts.Session.get` optional params
+        """
         return self.session.get(uri, **kwargs)
 
     @decorate_HTTP_verb_method
     def patch(self, uri, data=None, **kwargs):
-        # See decorate_HTTP_verb_method, and the requests api.
+        """Sends a HTTP PATCH command to the BIGIP REST Server.
+
+        Use this method to send a PATCH command to the BIGIP.  When calling
+        this method with the optional arguments ``name`` and ``partition``
+        as part of ``**kwargs`` they will be added to the ``uri`` passed
+        in separated by ~ to create a proper BIGIP REST API URL for objects.
+
+        All other parameters passed in as ``**kwargs`` are passed directly
+        to the :meth:`requests.Session.patch`
+
+        :param uri: A HTTP URI
+        :type uri: str
+        :param data: The data to be sent with the PATCH command
+        :type data: str
+        :param name: The object name that will be appended to the uri
+        :type name: str
+        :arg partition: The partition name that will be appened to the uri
+        :type partition: str
+        :param \**kwargs: The :meth:`reqeusts.Session.patch` optional params
+        """
         return self.session.patch(uri, data=data, **kwargs)
 
     @decorate_HTTP_verb_method
     def post(self, uri, data=None, json=None, **kwargs):
-        # See decorate_HTTP_verb_method, and the requests api.
+        """Sends a HTTP POST command to the BIGIP REST Server.
+
+        Use this method to send a POST command to the BIGIP.  When calling
+        this method with the optional arguments ``name`` and ``partition``
+        as part of ``**kwargs`` they will be added to the ``uri`` passed
+        in separated by ~ to create a proper BIGIP REST API URL for objects.
+
+        All other parameters passed in as ``**kwargs`` are passed directly
+        to the :meth:`requests.Session.post`
+
+        :param uri: A HTTP URI
+        :type uri: str
+        :param data: The data to be sent with the POST command
+        :type data: str
+        :param json: The JSON data to be sent with the POST command
+        :type json: dict
+        :param name: The object name that will be appended to the uri
+        :type name: str
+        :arg partition: The partition name that will be appened to the uri
+        :type partition: str
+        :param \**kwargs: The :meth:`reqeusts.Session.post` optional params
+        """
         return self.session.post(uri, data=data, json=json, **kwargs)
 
     @decorate_HTTP_verb_method
     def put(self, uri, data=None, **kwargs):
-        # See decorate_HTTP_verb_method, and the requests api.
+        """Sends a HTTP PUT command to the BIGIP REST Server.
+
+        Use this method to send a PUT command to the BIGIP.  When calling
+        this method with the optional arguments ``name`` and ``partition``
+        as part of ``**kwargs`` they will be added to the ``uri`` passed
+        in separated by ~ to create a proper BIGIP REST API URL for objects.
+
+        All other parameters passed in as ``**kwargs`` are passed directly
+        to the :meth:`requests.Session.put`
+
+        :param uri: A HTTP URI
+        :type uri: str
+        :param data: The data to be sent with the PUT command
+        :type data: str
+        :param json: The JSON data to be sent with the PUT command
+        :type json: dict
+        :param name: The object name that will be appended to the uri
+        :type name: str
+        :arg partition: The partition name that will be appened to the uri
+        :type partition: str
+        :param \**kwargs: The :meth:`reqeusts.Session.put` optional params
+        """
         return self.session.put(uri, data=data, **kwargs)
