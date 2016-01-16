@@ -12,6 +12,13 @@ install:
 script:
     - flake8 .
     - py.test --cov --ignore=test/
+deploy:
+    provider: pypi
+    user: $PYPI_USER
+    password: $PYPI_PASSWORD
+    on:
+        tags: true
+        branch: production
 notifications:
     slack:
       rooms:
