@@ -16,8 +16,8 @@ deploy:
     user: $PYPI_USER
     password: $PYPI_PASSWORD
     on:
+        all_branches: true
         tags: true
-        branch: production
 notifications:
     slack:
       rooms:
