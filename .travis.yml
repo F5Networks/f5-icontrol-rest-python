@@ -21,7 +21,7 @@ deploy:
 notifications:
     slack:
       rooms:
-        - f5openstackdev:IbC9KXz2vGVq9jkOLCT5USYD#icontrol_rest_python
-        - f5openstackdev:IbC9KXz2vGVq9jkOLCT5USYD#build-status
+        - f5openstackdev:$SLACK_PROJECT_TOKEN
+        - f5openstackdev:$SLACK_BUILD_STATUS_TOKEN
       on_success: change
       on_failure: always
