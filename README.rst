@@ -153,7 +153,7 @@ Agreement <http://f5networks.github.io/f5-openstack-docs/cla_landing/index.html>
 to Openstack\_CLA@f5.com prior to their code submission being included
 in this project.
 
-.. |Build Status| image:: https://travis-ci.com/F5Networks/f5-icontrol-rest-python.svg?token=2gRRgdSNRf2z9jAftSpV
-   :target: https://travis-ci.com/F5Networks/f5-icontrol-rest-python
+.. |Build Status| image:: https://travis-ci.org/F5Networks/f5-icontrol-rest-python.svg?branch=develop
+    :target: https://travis-ci.org/F5Networks/f5-icontrol-rest-python
 .. |Documentation Status| image:: https://readthedocs.org/projects/icontrol/badge/?version=latest
    :target: http://icontrol.readthedocs.org/en/latest/?badge=latest

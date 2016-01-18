@@ -6,7 +6,6 @@ python:
 before_install:
     - git config --global user.email "OpenStack_TravisCI@f5.com"
     - git config --global user.name "Travis F5 Openstack"
-    - git fetch --depth=100
 install:
     - pip install requests hacking pytest pytest-cov
 script:
