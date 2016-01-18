@@ -6,7 +6,6 @@ python:
 before_install:
     - git config --global user.email "OpenStack_TravisCI@f5.com"
     - git config --global user.name "Travis F5 Openstack"
-    - git fetch --depth=100
 install:
     - pip install requests hacking pytest pytest-cov
 script:
@@ -22,7 +21,7 @@ deploy:
 notifications:
     slack:
       rooms:
-        - f5openstackdev:IbC9KXz2vGVq9jkOLCT5USYD#icontrol_rest_python
-        - f5openstackdev:IbC9KXz2vGVq9jkOLCT5USYD#build-status
+        - f5openstackdev:$SLACK_PROJECT_TOKEN
+        - f5openstackdev:$SLACK_BUILD_STATUS_TOKEN
       on_success: change
       on_failure: always
