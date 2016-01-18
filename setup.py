@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2015 F5 Networks Inc.
+# Copyright 2015-2016 F5 Networks Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,25 +20,26 @@ from setuptools import setup
 import icontrol
 
 
-def readme():
-    with open('README.md') as f:
-        return f.read()
-
 setup(name='f5-icontrol-rest',
       description='F5 BIG-IP iControl REST API client',
-      long_description=readme(),
       license='Apache License, Version 2.0',
       version=icontrol.__version__,
-      author='F5 DevCentral',
+      author='F5 Networks',
       author_email='f5-icontrol-rest-python@f5.com',
       url='https://github.com/F5Networks/f5-icontrol-rest-python',
+      keywords=['F5', 'icontrol', 'rest', 'api', 'bigip'],
+      install_requires=[
+          'requests',
+      ],
       py_modules=[
-                  'icontrol.session',
+          'icontrol.session',
       ],
       packages=['icontrol'],
-      classifiers=['Development Status :: 5 - Production/Stable',
-                   'License :: OSI Approved :: Apache Software License',
-                   'Operating System :: OS Independent',
-                   'Programming Language :: Python',
-                   'Intended Audience :: System Administrators']
+      classifiers=[
+          'Development Status :: 5 - Production/Stable',
+          'License :: OSI Approved :: Apache Software License',
+          'Operating System :: OS Independent',
+          'Programming Language :: Python',
+          'Intended Audience :: System Administrators',
+      ]
       )
