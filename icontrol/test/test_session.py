@@ -113,7 +113,7 @@ def test_incorrect_uri_construction_illegal_suffix_slash_last(uparts):
 def test_correct_uri_construction_partitionless(uparts):
     uparts['partition'] = ''
     uri = session.generate_bigip_uri(**uparts)
-    assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~foobar1/members/m1'
+    assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/foobar1/members/m1'
 
 
 def test_correct_uri_construction_nameless(uparts):
@@ -142,7 +142,7 @@ def test_correct_uri_construction_partitionless_and_suffixless(uparts):
     uparts['partition'] = ''
     uparts['suffix'] = ''
     uri = session.generate_bigip_uri(**uparts)
-    assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~foobar1'
+    assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/foobar1'
 
 
 def test_correct_uri_construction_nameless_and_suffixless(uparts):
