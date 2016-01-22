@@ -199,7 +199,7 @@ def generate_bigip_uri(base_uri, partition, name, suffix, **kwargs):
     _validate_uri_parts(base_uri, name, partition, suffix)
     if partition != '':
         partition = '~'+partition
-    if name != '':
+    if name != '' and partition != '':
         name = '~'+name
     tilded_partition_and_instance = partition+name
     if suffix and not tilded_partition_and_instance:
