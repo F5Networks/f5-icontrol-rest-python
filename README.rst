@@ -42,8 +42,8 @@ Usage
     icr_session = iControlRESTSession('myuser', 'mypass')
     icr_session.get(
         'https://bigip.example.com/mgmt/tm/ltm/nat',
-        instance_name='mynat',
-        folder='Common')
+        name='mynat',
+        partition='Common')
 
 Documentation
 -------------
