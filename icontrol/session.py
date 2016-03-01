@@ -274,6 +274,7 @@ def decorate_HTTP_verb_method(method):
                                       REST_uri, suffix, **kwargs)
         response = method(self, REST_uri, **kwargs)
         _log_HTTP_verb_method_postcall(logger, self.log_level, response)
+        logger.handlers[0].close()
         if response.status_code not in range(200, 207):
             error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
                             (response.status_code,

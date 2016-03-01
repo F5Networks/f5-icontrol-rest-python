@@ -35,8 +35,8 @@ Examples
     # GET to https://bigip.example.com/mgmt/tm/ltm/nat/~Common~mynat
     icr_session.get(
         'https://bigip.example.com/mgmt/tm/ltm/nat',
-        instance_name='mynat',
-        folder='Common')
+        name='mynat',
+        partition='Common')
 
     # GET to https://bigip.example.com/mgmt/tm/ltm/nat
     icr_session.get('https://bigip.example.com/mgmt/tm/ltm/nat')
