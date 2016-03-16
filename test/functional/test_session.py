@@ -116,6 +116,7 @@ def test_put(request, ICR, POST_URL):
         POST_URL,
         name=nat_data['name'],
         partition=nat_data['partition'],
+        uri_as_parts=True,
         json=data)
     response_data = response.json()
     assert response.status_code == 200
@@ -147,6 +148,7 @@ def test_patch(request, ICR, POST_URL):
         POST_URL,
         name=nat_data['name'],
         partition=nat_data['partition'],
+        uri_as_parts=True,
         json=data)
     response_data = response.json()
     assert response.status_code == 200
@@ -175,7 +177,8 @@ def test_delete(request, ICR, POST_URL):
     response = ICR.delete(
         POST_URL,
         name=nat_data['name'],
-        partition=nat_data['partition'])
+        partition=nat_data['partition'],
+        uri_as_parts=True)
     assert response.status_code == 200
     with pytest.raises(ValueError):
         response.json()
@@ -184,7 +187,9 @@ def test_delete(request, ICR, POST_URL):
         ICR.get(
             POST_URL,
             name=nat_data['name'],
-            partition=nat_data['partition'])
+            partition=nat_data['partition'],
+            uri_as_parts=True)
+    pp(err.value.response.status_code)
     assert err.value.response.status_code == 404
 
 
