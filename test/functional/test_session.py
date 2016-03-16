@@ -23,6 +23,7 @@ i.e https://192.168.1.1/mgmt/tm/boguscollection
 from icontrol.session import iControlRESTSession
 from requests.exceptions import HTTPError
 
+from pprint import pprint as pp
 import pytest
 
 nat_data = {
@@ -33,10 +34,10 @@ nat_data = {
 }
 
 
-def teardown_nat(request, icr, url, name, folder):
+def teardown_nat(request, icr, url, name, partition):
     '''Remove the nat object that we create during a test '''
     def teardown():
-        icr.delete(url, instance_name=name, folder=folder)
+        icr.delete(url, uri_as_parts=True, name=name, partition=partition)
     request.addfinalizer(teardown)
 
 
@@ -45,7 +46,7 @@ def invalid_url(func, url):
     with pytest.raises(HTTPError) as err:
         func(url)
     return (err.value.response.status_code == 404 and
-            '404 Client Error: Not Found for url: ' + url
+            'Unexpected Error: Not Found for uri: ' + url
             in err.value.message)
 
 
@@ -113,8 +114,8 @@ def test_put(request, ICR, POST_URL):
     ICR.post(POST_URL, json=nat_data)
     response = ICR.put(
         POST_URL,
-        instance_name=nat_data['name'],
-        folder=nat_data['partition'],
+        name=nat_data['name'],
+        partition=nat_data['partition'],
         json=data)
     response_data = response.json()
     assert response.status_code == 200
@@ -144,8 +145,8 @@ def test_patch(request, ICR, POST_URL):
     ICR.post(POST_URL, json=nat_data)
     response = ICR.patch(
         POST_URL,
-        instance_name=nat_data['name'],
-        folder=nat_data['partition'],
+        name=nat_data['name'],
+        partition=nat_data['partition'],
         json=data)
     response_data = response.json()
     assert response.status_code == 200
@@ -173,8 +174,8 @@ def test_delete(request, ICR, POST_URL):
     ICR.post(POST_URL, json=nat_data)
     response = ICR.delete(
         POST_URL,
-        instance_name=nat_data['name'],
-        folder=nat_data['partition'])
+        name=nat_data['name'],
+        partition=nat_data['partition'])
     assert response.status_code == 200
     with pytest.raises(ValueError):
         response.json()
@@ -182,8 +183,8 @@ def test_delete(request, ICR, POST_URL):
     with pytest.raises(HTTPError) as err:
         ICR.get(
             POST_URL,
-            instance_name=nat_data['name'],
-            folder=nat_data['partition'])
+            name=nat_data['name'],
+            partition=nat_data['partition'])
     assert err.value.response.status_code == 404
 
 
