@@ -59,10 +59,12 @@ against the BigIP REST Server, by pre- and post- processing the above methods.
 
 import functools
 import logging
-import os
 import requests
-import time
 import urlparse
+
+# Configure logging defaults
+format_str = '%(levelname)s %(asctime)s %(message)s'
+logging.basicConfig(format=format_str)
 
 
 class iControlUnexpectedHTTPError(requests.HTTPError):
@@ -208,38 +210,6 @@ def generate_bigip_uri(base_uri, partition, name, suffix, **kwargs):
     return REST_uri
 
 
-def _config_logging(logdir, methodname, level, cls_name):
-    # Configure output handler for the HTTP method's log
-    log_path = os.path.join(logdir, methodname)
-    logfile_handler = logging.FileHandler(log_path)
-    formatter = logging.Formatter('%(asctime)s PID: %(process)s %(message)s')
-    logfile_handler.setFormatter(formatter)
-    # Configure logger
-    logger = logging.getLogger(__name__)
-    logger.setLevel(level)
-    logger.addHandler(logfile_handler)
-    return logger
-
-
-def _log_HTTP_verb_method_precall(logger, methodname, level, cls_name,
-                                  request_uri, suffix, **kwargs):
-    # Helper used by decorate_HTTP_verb_method.
-    pre_message = "%s.%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
-        (cls_name, methodname, request_uri, suffix, kwargs)
-    logger.log(level, pre_message)
-
-
-def _log_HTTP_verb_method_postcall(logger, level, response):
-    # Helper used by decorate_HTTP_verb_method.
-    post_message = "RESPONSE::STATUS:" +\
-                   " %s Content-Type: %s Content-Encoding: %s\nText: %r" %\
-        (response.status_code,
-         response.headers.get('Content-Type', None),
-         response.headers.get('Content-Encoding', None),
-         response.text)
-    logger.log(level, post_message)
-
-
 def decorate_HTTP_verb_method(method):
     """Prepare and Post-Process HTTP VERB method for BigIP-RESTServer request.
 
@@ -267,14 +237,18 @@ def decorate_HTTP_verb_method(method):
                                           suffix, **kwargs)
         else:
             REST_uri = RIC_base_uri
-        logger = _config_logging(self.log_dir, method.__name__, self.log_level,
-                                 self.__class__.__name__)
-        _log_HTTP_verb_method_precall(logger, method.__name__,
-                                      self.log_level, self.__class__.__name__,
-                                      REST_uri, suffix, **kwargs)
+        pre_message = "%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
+            (method.__name__, REST_uri, suffix, kwargs)
+        print("About to log pre_message.")
+        logging.info(pre_message)
         response = method(self, REST_uri, **kwargs)
-        _log_HTTP_verb_method_postcall(logger, self.log_level, response)
-        logger.handlers[0].close()
+        post_message =\
+            "RESPONSE::STATUS: %s Content-Type: %s Content-Encoding:"\
+            " %s\nText: %r" % (response.status_code,
+                               response.headers.get('Content-Type', None),
+                               response.headers.get('Content-Encoding', None),
+                               response.text)
+        logging.debug(post_message)
         if response.status_code not in range(200, 207):
             error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
                             (response.status_code,
@@ -307,7 +281,8 @@ class iControlRESTSession(object):
         "disable_warnings" statement.
         """
         timeout = kwargs.pop('timeout', 30)
-        loglevel = kwargs.pop('loglevel', logging.DEBUG)
+        loglevel = kwargs.pop('loglevel', logging.WARNING)
+        logging.getLogger().setLevel(loglevel)
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
         requests.packages.urllib3.disable_warnings()
@@ -322,18 +297,6 @@ class iControlRESTSession(object):
         # Set state as indicated by ancestral code.
         self.session.verify = False  # XXXmake TOFU
         self.session.headers.update({'Content-Type': 'application/json'})
-
-        # Set new state not specified in callers
-        self.log_level = loglevel
-        self.log_dir = self._make_log_dir()
-
-    def _make_log_dir(self):
-        second = '%0.f' % time.time()
-        full_name = os.path.join('logs', self.__class__.__name__, second)
-        dirname = os.path.abspath(full_name)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-        return dirname
 
     @decorate_HTTP_verb_method
     def delete(self, uri, **kwargs):
@@ -451,6 +414,6 @@ class iControlRESTSession(object):
         :type name: str
         :arg partition: The partition name that will be appened to the uri
         :type partition: str
-        :param \**kwargs: The :meth:`reqeusts.Session.put` optional params
+        :param **kwargs: The :meth:`reqeusts.Session.put` optional params
         """
         return self.session.put(uri, data=data, **kwargs)
