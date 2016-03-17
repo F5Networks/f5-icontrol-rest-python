@@ -12,8 +12,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import logging
 import mock
+from pprint import pprint as pp
 import pytest
+from requests import ConnectionError
 
 from icontrol import session
 
@@ -267,3 +270,12 @@ def test_wrapped_put_success_with_data(iCRS, uparts):
     assert iCRS.session.put.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
                   data={'b': 2})
+
+
+def test_set_log_level(uparts):
+    pp("start test_set_log_level")
+    real_iCRS = session.iControlRESTSession('admin', 'admin',
+                                            loglevel=logging.DEBUG)
+    with pytest.raises(ConnectionError):
+        real_iCRS.put(uparts['base_uri'], partition='AFN', name='AIN',
+                      data={'b': 2}, uri_as_parts=True)
