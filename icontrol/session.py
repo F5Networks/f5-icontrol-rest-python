@@ -67,7 +67,7 @@ import urlparse
 
 HTTPConnection.debuglevel = 1
 logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.WARNING)
 
 
 class iControlUnexpectedHTTPError(requests.HTTPError):
@@ -242,7 +242,7 @@ def decorate_HTTP_verb_method(method):
             REST_uri = RIC_base_uri
         pre_message = "%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
             (method.__name__, REST_uri, suffix, kwargs)
-        logging.warning(pre_message)
+        logging.info(pre_message)
         response = method(self, REST_uri, **kwargs)
         post_message =\
             "RESPONSE::STATUS: %s Content-Type: %s Content-Encoding:"\
@@ -250,7 +250,7 @@ def decorate_HTTP_verb_method(method):
                                response.headers.get('Content-Type', None),
                                response.headers.get('Content-Encoding', None),
                                response.text)
-        logging.warning(post_message)
+        logging.info(post_message)
         if response.status_code not in range(200, 207):
             error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
                             (response.status_code,
@@ -300,17 +300,10 @@ class iControlRESTSession(object):
         self.session.headers.update({'Content-Type': 'application/json'})
 
         # Set new state not specified in callers
-        self.log_level = loglevel
-        self.log_dir = self._make_log_dir()
         self.logger = logging.getLogger("requests.packages.urllib3")
-
-    def _make_log_dir(self):
-        second = '%0.f' % time.time()
-        full_name = os.path.join('logs', self.__class__.__name__, second)
-        dirname = os.path.abspath(full_name)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-        return dirname
+        self.logger.setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.CRITICAL)
+        self.logger.propagate = True
 
     @decorate_HTTP_verb_method
     def delete(self, uri, **kwargs):
