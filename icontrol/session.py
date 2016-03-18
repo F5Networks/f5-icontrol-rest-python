@@ -239,7 +239,6 @@ def decorate_HTTP_verb_method(method):
             REST_uri = RIC_base_uri
         pre_message = "%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
             (method.__name__, REST_uri, suffix, kwargs)
-        print("About to log pre_message.")
         logging.info(pre_message)
         response = method(self, REST_uri, **kwargs)
         post_message =\
