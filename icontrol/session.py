@@ -62,10 +62,6 @@ import logging
 import requests
 import urlparse
 
-# Configure logging defaults
-format_str = '%(levelname)s %(asctime)s %(message)s'
-logging.basicConfig(format=format_str)
-
 
 class iControlUnexpectedHTTPError(requests.HTTPError):
     # The Status Code was in the range 207-399
@@ -239,8 +235,7 @@ def decorate_HTTP_verb_method(method):
             REST_uri = RIC_base_uri
         pre_message = "%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
             (method.__name__, REST_uri, suffix, kwargs)
-        print("About to log pre_message.")
-        logging.info(pre_message)
+        logging.debug(pre_message)
         response = method(self, REST_uri, **kwargs)
         post_message =\
             "RESPONSE::STATUS: %s Content-Type: %s Content-Encoding:"\
@@ -281,8 +276,6 @@ class iControlRESTSession(object):
         "disable_warnings" statement.
         """
         timeout = kwargs.pop('timeout', 30)
-        loglevel = kwargs.pop('loglevel', logging.WARNING)
-        logging.getLogger().setLevel(loglevel)
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
         requests.packages.urllib3.disable_warnings()
