@@ -70,11 +70,6 @@ import requests
 import urlparse
 
 
-# Configure logging defaults
-format_str = '%(levelname)s %(asctime)s %(message)s'
-logging.basicConfig(format=format_str)
-
-
 def _validate_icruri(base_uri):
     # The icr_uri should specify https, the server name/address, and the path
     # to the REST-or-tm management interface "/mgmt/tm/"
@@ -210,7 +205,7 @@ def decorate_HTTP_verb_method(method):
             REST_uri = RIC_base_uri
         pre_message = "%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
             (method.__name__, REST_uri, suffix, kwargs)
-        logging.info(pre_message)
+        logging.debug(pre_message)
         response = method(self, REST_uri, **kwargs)
         post_message =\
             "RESPONSE::STATUS: %s Content-Type: %s Content-Encoding:"\
@@ -255,8 +250,6 @@ class iControlRESTSession(object):
         "disable_warnings" statement.
         """
         timeout = kwargs.pop('timeout', 30)
-        loglevel = kwargs.pop('loglevel', logging.WARNING)
-        logging.getLogger().setLevel(loglevel)
         token_auth = kwargs.pop('token', None)
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
