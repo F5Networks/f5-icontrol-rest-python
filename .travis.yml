@@ -11,6 +11,7 @@ install:
 script:
     - flake8 .
     - py.test --cov --ignore=test/
+    - pip install -r requirements.test.txt
 deploy:
     provider: pypi
     user: $PYPI_USER

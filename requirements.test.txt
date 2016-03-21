@@ -1,0 +1,8 @@
+# Install setup.py install_requires packages
+-e .
+
+# Test Requirements
+hacking==0.10.2
+mock==1.3.0
+pytest==2.9.1
+pytest-cov==2.2.0
