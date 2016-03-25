@@ -3,26 +3,30 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-F5 Networks icontrol documentation
-=================================================
+f5-icontrol-rest-python
+=======================
 
-Introduction
--------------
-The F5 Networks :mod:`icontrol` module is used to send commands to the `BIGIP
-iControl REST API <https://devcentral.f5.com/d/icontrol-rest-user-guide>`_.
+Overview
+--------
+The F5 Networks® :mod:`icontrol` module is used to send commands to the `BIGIP®
+iControl® REST API <https://devcentral.f5.com/d/icontrol-rest-user-guide>`_.
 The library maintains a HTTP session (which is a :class:`requests.Session`) and
 does URL validation and logging.
 
 Installation
--------------
+------------
+
 Using Pip
 +++++++++
+
 .. code-block:: bash
 
-    pip install f5-icontrol-rest
+    $ pip install f5-icontrol-rest
+
 
 GitHub
 ++++++
+
 `F5Networks/f5-icontrol-rest-python <https://github.com/F5Networks/f5-icontrol-rest-python>`_
 
 Examples
@@ -45,12 +49,14 @@ Examples
     icr_session.post('https://bigip.example.com/mgmt/tm/ltm/nat', \
     json={'name': 'myname', 'partition': 'Common'})
 
+
 Module Documentation
 --------------------
-.. toctree::
-   :maxdepth: 4
 
-   apidocs/modules
+.. toctree::
+    :maxdepth: 4
+
+    apidocs/modules
 
 
 License
@@ -71,9 +77,5 @@ limitations under the License.
 
 Contributor License Agreement
 +++++++++++++++++++++++++++++
-Individuals or business entities who contribute to this project must have
-completed and submitted the
-`F5 Contributor License Agreement <http://f5networks.github.io/f5-openstack-docs/cla_landing/index.html>`_
-to Openstack_CLA@f5.com prior to their code submission being included in this
-project.
+Individuals or business entities who contribute to this project must have completed and submitted the `F5® Contributor License Agreement <http://f5-openstack-docs.readthedocs.org/en/latest/cla_landing.html>`_ to Openstack_CLA@f5.com prior to their code submission being included in this project.
 
