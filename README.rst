@@ -32,7 +32,6 @@ Installing directly from GitHub
 
 Configuration
 -------------
-
 N/A
 
 Usage
@@ -51,7 +50,7 @@ Usage
 Documentation
 -------------
 
-See `Documentation <http://icontrol.readthedocs.org>`__
+See `Documentation <http://icontrol.readthedocs.org>`__.
 
 Filing Issues
 -------------
@@ -63,7 +62,7 @@ about what you found and how you found it.
 Contributing
 ------------
 
-See `Contributing <CONTRIBUTING.md>`__
+See `Contributing <CONTRIBUTING.md>`__.
 
 Build
 -----
@@ -113,7 +112,7 @@ step 1 in the Unit Test section).
 
 Contact
 -------
-f5-icontrol-rest@f5.com
+Join us on `Slack <https://f5-openstack-slack.herokuapp.com/>`_!
 
 Copyright
 ---------

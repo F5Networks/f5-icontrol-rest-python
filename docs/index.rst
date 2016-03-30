@@ -59,6 +59,10 @@ Module Documentation
     apidocs/modules
 
 
+Contact
+-------
+Join us on `Slack <https://f5-openstack-slack.herokuapp.com/>`_!
+
 License
 -------
 Apache V2.0
