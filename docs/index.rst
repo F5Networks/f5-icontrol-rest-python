@@ -6,6 +6,10 @@
 f5-icontrol-rest-python
 =======================
 
+.. raw:: html
+
+    <script async defer src="https://f5-openstack-slack.herokuapp.com/slackin.js"></script>
+
 Overview
 --------
 The F5 Networks® :mod:`icontrol` module is used to send commands to the `BIGIP®
@@ -58,10 +62,6 @@ Module Documentation
 
     apidocs/modules
 
-
-Contact
--------
-Join us on `Slack <https://f5-openstack-slack.herokuapp.com/>`_!
 
 License
 -------
