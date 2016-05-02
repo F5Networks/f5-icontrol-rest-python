@@ -1,7 +1,7 @@
 f5-icontrol-rest-python
 =======================
 
-|Build Status| |Documentation Status|
+|Build Status| |Documentation Status| |slack badge|
 
 Introduction
 ------------
@@ -109,11 +109,6 @@ step 1 in the Unit Test section).
 
     $ flake8 ./
 
-
-Contact
--------
-Join us on `Slack <https://f5-openstack-slack.herokuapp.com/>`_!
-
 Copyright
 ---------
 Copyright 2015-2016 F5 Networks Inc.
@@ -148,3 +143,7 @@ Individuals or business entities who contribute to this project must have comple
     :target: https://travis-ci.org/F5Networks/f5-icontrol-rest-python
 .. |Documentation Status| image:: https://readthedocs.org/projects/icontrol/badge/?version=latest
    :target: http://icontrol.readthedocs.org/en/latest/?badge=latest
+.. |slack badge| image:: https://f5-openstack-slack.herokuapp.com/badge.svg
+    :target: https://f5-openstack-slack.herokuapp.com/
+    :alt: Slack
+
