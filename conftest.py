@@ -28,6 +28,14 @@ def pytest_addoption(parser):
     parser.addoption("--password", action="store", help="BIG-IP REST password",
                      default="admin")
 
+    # These are optional; if not specified, tests skip.
+    parser.addoption("--nonadmin-username", action="store",
+                     help="BIG-IP REST username for non-admin user",
+                     default=None)
+    parser.addoption("--nonadmin-password", action="store",
+                     help="BIG-IP REST password for non-admin user",
+                     default=None)
+
 
 def pytest_generate_tests(metafunc):
     assert metafunc.config.option.bigip
@@ -51,6 +59,16 @@ def opt_password(request):
 @pytest.fixture
 def opt_port(request):
     return request.config.getoption("--port")
+
+
+@pytest.fixture
+def opt_nonadmin_username(request):
+    return request.config.getoption("--nonadmin-username")
+
+
+@pytest.fixture
+def opt_nonadmin_password(request):
+    return request.config.getoption("--nonadmin-password")
 
 
 @pytest.fixture

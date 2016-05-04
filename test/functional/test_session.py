@@ -25,6 +25,7 @@ from requests.exceptions import HTTPError
 
 from pprint import pprint as pp
 import pytest
+import time
 
 nat_data = {
     'name': 'foo',
@@ -57,6 +58,15 @@ def invalid_credentials(user, password, url):
         icr.get(url)
     return (err.value.response.status_code == 401 and
             '401 Client Error: F5 Authorization Required' in str(err.value))
+
+
+def invalid_token_credentials(user, password, url):
+    '''Reusable test to make sure that we get 401 for invalid token creds '''
+    icr = iControlRESTSession(user, password, token=True)
+    with pytest.raises(HTTPError) as err:
+        icr.get(url)
+    return (err.value.response.status_code == 401 and
+            'Authentication required!' in err.value.message)
 
 
 def test_get(ICR, GET_URL):
@@ -215,3 +225,91 @@ def test_invalid_password(opt_username, GET_URL):
     Pass: Returns 401 with authorization required message
     '''
     invalid_credentials(opt_username, 'fakepassword', GET_URL)
+
+
+def test_token_auth(opt_username, opt_password, GET_URL):
+    icr = iControlRESTSession(opt_username, opt_password, token=True)
+    response = icr.get(GET_URL)
+    assert response.status_code == 200
+
+
+def test_token_auth_twice(opt_username, opt_password, GET_URL):
+    icr = iControlRESTSession(opt_username, opt_password, token=True)
+    assert icr.session.auth.attempts == 0
+    response = icr.get(GET_URL)
+    assert response.status_code == 200
+    assert icr.session.auth.attempts == 1
+    response = icr.get(GET_URL)
+    assert response.status_code == 200
+    # This token should still be valid, so we should reuse it.
+    assert icr.session.auth.attempts == 1
+
+
+def test_token_auth_expired(opt_username, opt_password, GET_URL):
+    icr = iControlRESTSession(opt_username, opt_password, token=True)
+    assert icr.session.auth.attempts == 0
+    response = icr.get(GET_URL)
+    assert response.status_code == 200
+    assert icr.session.auth.attempts == 1
+    assert icr.session.auth.expiration >= time.time()
+
+    # Artificially expire the token
+    icr.session.auth.expiration = time.time() - 1.0
+
+    # Since token is expired, we should get a new one.
+    response = icr.get(GET_URL)
+    assert response.status_code == 200
+    assert icr.session.auth.attempts == 2
+
+
+def test_token_invalid_user(opt_password, GET_URL):
+    invalid_token_credentials('fakeuser', opt_password, GET_URL)
+
+
+def test_token_invalid_password(opt_username, GET_URL):
+    invalid_token_credentials(opt_username, 'fakepassword', GET_URL)
+
+
+# You must configure a user that has a non-admin role in a partition for
+# test_nonadmin tests to be effective.  For instance:
+#
+# auth user bob {
+#    description bob
+#    encrypted-password $6$LsSnHp7J$AIJ2IC8kS.YDrrn/sH6BsxQ...
+#    partition Common
+#    partition-access {
+#        bobspartition {
+#            role operator
+#        }
+#    }
+#    shell tmsh
+# }
+#
+# Then instantiate with --nonadmin-username=bob --nonadmin-password=changeme
+def test_nonadmin_token_auth(opt_nonadmin_username, opt_nonadmin_password,
+                             GET_URL):
+    if not opt_nonadmin_username or not opt_nonadmin_password:
+        pytest.skip("No non-admin username/password configured")
+    icr = iControlRESTSession(opt_nonadmin_username,
+                              opt_nonadmin_password,
+                              token=True)
+    response = icr.get(GET_URL)
+    assert response.status_code == 200
+
+
+def test_nonadmin_token_auth_invalid_password(opt_nonadmin_username,
+                                              GET_URL):
+    if not opt_nonadmin_username:
+        pytest.skip("No non-admin username/password configured")
+    invalid_token_credentials(opt_nonadmin_username,
+                              'fakepassword',
+                              GET_URL)
+
+
+def test_nonadmin_token_auth_invalid_username(opt_nonadmin_password,
+                                              GET_URL):
+    if not opt_nonadmin_password:
+        pytest.skip("No non-admin username/password configured")
+    invalid_token_credentials('fakeuser',
+                              opt_nonadmin_password,
+                              GET_URL)
