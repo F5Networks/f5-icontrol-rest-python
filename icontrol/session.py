@@ -58,6 +58,7 @@ against the BigIP REST Server, by pre- and post- processing the above methods.
 """
 
 import functools
+from icontrol.authtoken import iControlRESTTokenAuth
 from icontrol.exceptions import iControlUnexpectedHTTPError
 from icontrol.exceptions import InvalidBigIP_ICRURI
 from icontrol.exceptions import InvalidInstanceNameOrFolder
@@ -253,6 +254,7 @@ class iControlRESTSession(object):
         timeout = kwargs.pop('timeout', 30)
         loglevel = kwargs.pop('loglevel', logging.WARNING)
         logging.getLogger().setLevel(loglevel)
+        token_auth = kwargs.pop('token', None)
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
         requests.packages.urllib3.disable_warnings()
@@ -261,8 +263,17 @@ class iControlRESTSession(object):
         self.session = requests.Session()
 
         # Configure with passed parameters
-        self.session.auth = (username, password)
         self.session.timeout = timeout
+
+        # Handle token-based auth.
+        if token_auth is True:
+            self.session.auth = iControlRESTTokenAuth(username, password)
+        elif token_auth:  # Truthy but not true: non-default loginAuthProvider
+            self.session.auth = iControlRESTTokenAuth(username,
+                                                      password,
+                                                      token_auth)
+        else:
+            self.session.auth = (username, password)
 
         # Set state as indicated by ancestral code.
         self.session.verify = False  # XXXmake TOFU
