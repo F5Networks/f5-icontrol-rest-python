@@ -59,6 +59,12 @@ against the BigIP REST Server, by pre- and post- processing the above methods.
 
 from distutils.version import StrictVersion
 import functools
+from icontrol.exceptions import iControlUnexpectedHTTPError
+from icontrol.exceptions import InvalidBigIP_ICRURI
+from icontrol.exceptions import InvalidInstanceNameOrFolder
+from icontrol.exceptions import InvalidPrefixCollection
+from icontrol.exceptions import InvalidScheme
+from icontrol.exceptions import InvalidSuffixCollection
 import logging
 import requests
 
@@ -68,43 +74,6 @@ try:
 except ImportError:
     # Python 2
     from urlparse import urlsplit
-
-
-class iControlUnexpectedHTTPError(requests.HTTPError):
-    # The Status Code was in the range 207-399
-    pass
-
-
-class BigIPInvalidURL(Exception):
-    # Some component to be incorporated into the uri is illegal
-    pass
-
-
-class InvalidScheme(BigIPInvalidURL):
-    # The only acceptable scheme is https
-    pass
-
-
-class InvalidBigIP_ICRURI(BigIPInvalidURL):
-    # This must contain the servername/address and /mgmt/tm/
-    pass
-
-
-class InvalidPrefixCollection(BigIPInvalidURL):
-    # Must not start with '/' because it's relative to the icr_uri
-    # must end with a '/' since there may be names or suffixes
-    # following and they are relative, to the prefix
-    pass
-
-
-class InvalidInstanceNameOrFolder(BigIPInvalidURL):
-    # instance names and partitions must not contain the '~' or '/' chars
-    pass
-
-
-class InvalidSuffixCollection(BigIPInvalidURL):
-    # must start with a '/' since there may be a partition or name before it
-    pass
 
 
 def _validate_icruri(base_uri):
