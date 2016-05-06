@@ -244,6 +244,10 @@ class iControlRESTSession(object):
     Objects instantiated from this class provide an HTTP 1.1 style session, via
     the :class:`requests.Session` object, and HTTP-methods that are specialized
     to the BigIP-RESTServer interface.
+
+    Pass ``token=True`` in ``**kwargs`` to use token-based authentication.
+    This is required for users that do not have the Administrator role on
+    BigIP.
     """
     def __init__(self, username, password, **kwargs):
         """Instantiation associated with requests.Session via composition.
