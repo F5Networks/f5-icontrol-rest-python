@@ -23,10 +23,11 @@ Use this module with requests to automatically get a new token, and attach
 :class:`requests.Session` object, so that it is used to authenticate future
 requests.
 
-This can be enabled in the iControlRESTSession by passing a "token=True"
-argument:
+Instead of using this module directly, it is easiest to enable it by passing
+a ``token=True`` argument when creating the
+:class:`.iControlRESTSession`:
 
-   iCRSession = iControlRESTSession('bob', 'secret', token=True)
+>>> iCRS = iControlRESTSession('bob', 'secret', token=True)
 """
 
 from icontrol.exceptions import iControlUnexpectedHTTPError
@@ -39,6 +40,19 @@ import urlparse
 
 
 class iControlRESTTokenAuth(AuthBase):
+    """Acquire and renew BigIP iControl REST authentication tokens.
+
+    :param str username: The username on BigIP
+    :param str password: The password for username on BigIP
+    :param str login_provider_name: The name of the login provider that \
+    BigIP should consult when creating the token.
+
+    If ``username`` is configured locally on the BigIP,
+    ``login_provider_name`` should be ``"tmos"`` (default).  Otherwise
+    (for example, ``username`` is configured on LDAP that BigIP consults),
+    consult BigIP documentation or your system administrator for the value
+    of ``login_provider_name``.
+    """
     def __init__(self, username, password, login_provider_name='tmos'):
         self.username = username
         self.password = password
@@ -49,7 +63,7 @@ class iControlRESTTokenAuth(AuthBase):
         # We don't actually do auth at this point because we don't have a
         # hostname to authenticate to.
 
-    def token_valid(self):
+    def _check_token_validity(self):
         if not self.token:
             return False
         if self.expiration and time.time() > self.expiration:
@@ -57,6 +71,16 @@ class iControlRESTTokenAuth(AuthBase):
         return True
 
     def get_new_token(self, netloc):
+        """Get a new token from BIG-IP and store it internally.
+
+        Throws relevant exception if it fails to get a new token.
+
+        This method will be called automatically if a request is attempted
+        but there is no authentication token, or the authentication token
+        is expired.  It is usually not necessary for users to call it, but
+        it can be called if it is known that the authentication token has
+        been invalidated by other means.
+        """
         login_body = {
             'username': self.username,
             'password': self.password,
@@ -87,7 +111,7 @@ class iControlRESTTokenAuth(AuthBase):
                 1000000.0
             created_bigip = int(respJson['token']['lastUpdateMicros']) / \
                 1000000.0
-        except KeyError:
+        except (KeyError, ValueError):
             error_message = \
                 '%s Unparseable Response: %s for uri: %s\nText: %r' %\
                 (response.status_code,
@@ -127,11 +151,11 @@ class iControlRESTTokenAuth(AuthBase):
             valid_duration -= 60.0
         self.expiration = req_start_time + valid_duration
 
-    def __call__(self, r):
-        if not self.token_valid():
-            scheme, netloc, path, _, _ = urlparse.urlsplit(r.url)
+    def __call__(self, request):
+        if not self._check_token_validity():
+            scheme, netloc, path, _, _ = urlparse.urlsplit(request.url)
             if scheme != "https":
                 raise InvalidScheme(scheme)
             self.get_new_token(netloc)
-        r.headers['X-F5-Auth-Token'] = self.token
-        return r
+        request.headers['X-F5-Auth-Token'] = self.token
+        return request
