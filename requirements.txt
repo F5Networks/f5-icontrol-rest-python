@@ -4,3 +4,4 @@ requests >= 2.9.1
 pytest
 pytest-coverage
 hacking
+mock

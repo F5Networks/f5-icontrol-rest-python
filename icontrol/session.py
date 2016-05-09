@@ -58,50 +58,21 @@ against the BigIP REST Server, by pre- and post- processing the above methods.
 """
 
 import functools
+from icontrol.authtoken import iControlRESTTokenAuth
+from icontrol.exceptions import iControlUnexpectedHTTPError
+from icontrol.exceptions import InvalidBigIP_ICRURI
+from icontrol.exceptions import InvalidInstanceNameOrFolder
+from icontrol.exceptions import InvalidPrefixCollection
+from icontrol.exceptions import InvalidScheme
+from icontrol.exceptions import InvalidSuffixCollection
 import logging
 import requests
 import urlparse
 
+
 # Configure logging defaults
 format_str = '%(levelname)s %(asctime)s %(message)s'
 logging.basicConfig(format=format_str)
-
-
-class iControlUnexpectedHTTPError(requests.HTTPError):
-    # The Status Code was in the range 207-399
-    pass
-
-
-class BigIPInvalidURL(Exception):
-    # Some component to be incorporated into the uri is illegal
-    pass
-
-
-class InvalidScheme(BigIPInvalidURL):
-    # The only acceptable scheme is https
-    pass
-
-
-class InvalidBigIP_ICRURI(BigIPInvalidURL):
-    # This must contain the servername/address and /mgmt/tm/
-    pass
-
-
-class InvalidPrefixCollection(BigIPInvalidURL):
-    # Must not start with '/' because it's relative to the icr_uri
-    # must end with a '/' since there may be names or suffixes
-    # following and they are relative, to the prefix
-    pass
-
-
-class InvalidInstanceNameOrFolder(BigIPInvalidURL):
-    # instance names and partitions must not contain the '~' or '/' chars
-    pass
-
-
-class InvalidSuffixCollection(BigIPInvalidURL):
-    # must start with a '/' since there may be a partition or name before it
-    pass
 
 
 def _validate_icruri(base_uri):
@@ -272,6 +243,10 @@ class iControlRESTSession(object):
     Objects instantiated from this class provide an HTTP 1.1 style session, via
     the :class:`requests.Session` object, and HTTP-methods that are specialized
     to the BigIP-RESTServer interface.
+
+    Pass ``token=True`` in ``**kwargs`` to use token-based authentication.
+    This is required for users that do not have the Administrator role on
+    BigIP.
     """
     def __init__(self, username, password, **kwargs):
         """Instantiation associated with requests.Session via composition.
@@ -283,6 +258,7 @@ class iControlRESTSession(object):
         timeout = kwargs.pop('timeout', 30)
         loglevel = kwargs.pop('loglevel', logging.WARNING)
         logging.getLogger().setLevel(loglevel)
+        token_auth = kwargs.pop('token', None)
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
         requests.packages.urllib3.disable_warnings()
@@ -291,8 +267,17 @@ class iControlRESTSession(object):
         self.session = requests.Session()
 
         # Configure with passed parameters
-        self.session.auth = (username, password)
         self.session.timeout = timeout
+
+        # Handle token-based auth.
+        if token_auth is True:
+            self.session.auth = iControlRESTTokenAuth(username, password)
+        elif token_auth:  # Truthy but not true: non-default loginAuthProvider
+            self.session.auth = iControlRESTTokenAuth(username,
+                                                      password,
+                                                      token_auth)
+        else:
+            self.session.auth = (username, password)
 
         # Set state as indicated by ancestral code.
         self.session.verify = False  # XXXmake TOFU
