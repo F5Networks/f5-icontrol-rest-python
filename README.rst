@@ -9,7 +9,7 @@ Introduction
 This generic python library allows programs and other modules to
 interact with the BIG-IP® iControl® REST API.
 
-**If you want to use python to automate BIG-IP® devices via the REST API, use the F5 SDK** (``f5-sdk``). Documentation for the ``f5-sdk`` is on Read the Docs: http://f5-sdk.readthedocs.io.
+**If you want to use python to automate BIG-IP® devices via the REST API, use the  F5 SDK** (`F5Networks/f5-common-python <https://github.com/F5Networks/f5-common-python>`_).
 
 Installation
 ------------
