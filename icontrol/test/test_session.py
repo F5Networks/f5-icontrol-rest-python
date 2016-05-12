@@ -267,3 +267,24 @@ def test_wrapped_put_success_with_data(iCRS, uparts):
     assert iCRS.session.put.call_args ==\
         mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
                   data={'b': 2})
+
+
+def test___init__with_newer_requests_pkg():
+    with mock.patch('icontrol.session.requests') as mock_requests:
+        mock_requests.__version__ = '2.9.9'
+        session.iControlRESTSession('test_name', 'test_pw')
+        assert mock_requests.packages.urllib3.disable_warnings.called is True
+
+
+def test___init__with_older_requests_pkg():
+    with mock.patch('icontrol.session.requests') as mock_requests:
+        mock_requests.__version__ = '2.1.1'
+        session.iControlRESTSession('test_name', 'test_pw')
+        assert mock_requests.packages.urllib3.disable_warnings.called is False
+
+
+def test___init__with_2_9_1_requests_pkg():
+    with mock.patch('icontrol.session.requests') as mock_requests:
+        mock_requests.__version__ = '2.9.1'
+        session.iControlRESTSession('test_name', 'test_pw')
+        assert mock_requests.packages.urllib3.disable_warnings.called is True
