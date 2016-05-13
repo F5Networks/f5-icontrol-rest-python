@@ -57,6 +57,7 @@ against the BigIP REST Server, by pre- and post- processing the above methods.
 
 """
 
+from distutils.version import StrictVersion
 import functools
 import logging
 import requests
@@ -278,7 +279,9 @@ class iControlRESTSession(object):
         timeout = kwargs.pop('timeout', 30)
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
-        requests.packages.urllib3.disable_warnings()
+        requests_version = requests.__version__
+        if StrictVersion(requests_version) < '2.9.1':
+            requests.packages.urllib3.disable_warnings()
 
         # Compose with a Session obj
         self.session = requests.Session()
