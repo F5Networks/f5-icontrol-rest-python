@@ -255,7 +255,7 @@ class iControlRESTSession(object):
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
         requests_version = requests.__version__
-        if StrictVersion(requests_version) >= '2.9.1':
+        if StrictVersion(requests_version) < '2.9.1':
             requests.packages.urllib3.disable_warnings()
 
         # Compose with a Session obj
