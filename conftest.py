@@ -23,6 +23,8 @@ def pytest_addoption(parser):
                      help="BIG-IP hostname or IP address")
     parser.addoption("--username", action="store", help="BIG-IP REST username",
                      default="admin")
+    parser.addoption("--port", action="store", help="BIG-IP port",
+                     default=443)
     parser.addoption("--password", action="store", help="BIG-IP REST password",
                      default="admin")
 
@@ -47,24 +49,29 @@ def opt_password(request):
 
 
 @pytest.fixture
+def opt_port(request):
+    return request.config.getoption("--port")
+
+
+@pytest.fixture
 def ICR(opt_bigip, opt_username, opt_password):
     icr = iControlRESTSession(opt_username, opt_password)
     return icr
 
 
 @pytest.fixture
-def GET_URL(opt_bigip):
-    url = 'https://' + opt_bigip + '/mgmt/tm/ltm/nat/'
+def GET_URL(opt_bigip, opt_port):
+    url = 'https://' + opt_bigip + ':' + opt_port + '/mgmt/tm/ltm/nat/'
     return url
 
 
 @pytest.fixture
-def POST_URL(opt_bigip):
-    url = 'https://' + opt_bigip + '/mgmt/tm/ltm/nat/'
+def POST_URL(opt_bigip, opt_port):
+    url = 'https://' + opt_bigip + ':' + opt_port + '/mgmt/tm/ltm/nat/'
     return url
 
 
 @pytest.fixture
-def FAKE_URL(opt_bigip):
-    fake_url = 'https://' + opt_bigip + '/mgmt/tm/bogus/'
+def FAKE_URL(opt_bigip, opt_port):
+    fake_url = 'https://' + opt_bigip + ':' + opt_port + '/mgmt/tm/bogus/'
     return fake_url
