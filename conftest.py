@@ -24,7 +24,7 @@ def pytest_addoption(parser):
     parser.addoption("--username", action="store", help="BIG-IP REST username",
                      default="admin")
     parser.addoption("--port", action="store", help="BIG-IP port",
-                     default=443)
+                     default='443')
     parser.addoption("--password", action="store", help="BIG-IP REST password",
                      default="admin")
 
