@@ -19,7 +19,7 @@ import pytest
 
 
 def pytest_addoption(parser):
-    parser.addoption("--bigip", action="store",
+    parser.addoption("--bigip", action="store", default='localhost',
                      help="BIG-IP hostname or IP address")
     parser.addoption("--username", action="store", help="BIG-IP REST username",
                      default="admin")
