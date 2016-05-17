@@ -61,7 +61,13 @@ from distutils.version import StrictVersion
 import functools
 import logging
 import requests
-import urlparse
+
+try:
+    # Python 3
+    from urllib.parse import urlsplit
+except ImportError:
+    # Python 2
+    from urlparse import urlsplit
 
 
 class iControlUnexpectedHTTPError(requests.HTTPError):
@@ -104,7 +110,7 @@ class InvalidSuffixCollection(BigIPInvalidURL):
 def _validate_icruri(base_uri):
     # The icr_uri should specify https, the server name/address, and the path
     # to the REST-or-tm management interface "/mgmt/tm/"
-    scheme, netloc, path, _, _ = urlparse.urlsplit(base_uri)
+    scheme, netloc, path, _, _ = urlsplit(base_uri)
     if scheme != 'https':
         raise InvalidScheme(scheme)
     if not path.startswith('/mgmt/tm/'):
