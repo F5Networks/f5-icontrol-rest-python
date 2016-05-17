@@ -48,7 +48,7 @@ def invalid_url(func, url):
         func(url)
     return (err.value.response.status_code == 404 and
             'Unexpected Error: Not Found for uri: ' + url
-            in err.value.message)
+            in str(err.value))
 
 
 def invalid_credentials(user, password, url):
@@ -57,7 +57,7 @@ def invalid_credentials(user, password, url):
     with pytest.raises(HTTPError) as err:
         icr.get(url)
     return (err.value.response.status_code == 401 and
-            '401 Client Error: F5 Authorization Required' in err.value.message)
+            '401 Client Error: F5 Authorization Required' in str(err.value))
 
 
 def invalid_token_credentials(user, password, url):
