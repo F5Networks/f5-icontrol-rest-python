@@ -45,7 +45,7 @@ def uparts():
 def test_iCRS_with_invalid_construction():
     with pytest.raises(TypeError) as UTE:
         session.iControlRESTSession('admin', 'admin', what='foble')
-    assert UTE.value.message == "Unexpected **kwargs: {'what': 'foble'}"
+    assert str(UTE.value) == "Unexpected **kwargs: {'what': 'foble'}"
 
 
 # Test uri component validation
@@ -53,14 +53,14 @@ def test_incorrect_uri_construction_bad_scheme(uparts):
     uparts['base_uri'] = 'hryttps://0.0.0.0/mgmt/tm/root/RESTiface/'
     with pytest.raises(session.InvalidScheme) as IS:
         session.generate_bigip_uri(**uparts)
-    assert IS.value.message == 'hryttps'
+    assert str(IS.value) == 'hryttps'
 
 
 def test_incorrect_uri_construction_bad_mgmt_path(uparts):
     uparts['base_uri'] = 'https://0.0.0.0/magmt/tm/root/RESTiface'
     with pytest.raises(session.InvalidBigIP_ICRURI) as IR:
         session.generate_bigip_uri(**uparts)
-    assert IR.value.message ==\
+    assert str(IR.value) ==\
         "The path must start with '/mgmt/tm/'!!  But it's: '/magmt/tm/'"
 
 
@@ -70,7 +70,7 @@ def test_incorrect_uri_construction_bad_base_nonslash_last(uparts):
         session.generate_bigip_uri(**uparts)
     test_value = "prefix_collections path element must end with '/', but" +\
         " it's: root/RESTiface"
-    assert IR.value.message == test_value
+    assert str(IR.value) == test_value
 
 
 def test_incorrect_uri_construction_illegal_slash_partition_char(uparts):
@@ -79,7 +79,7 @@ def test_incorrect_uri_construction_illegal_slash_partition_char(uparts):
         session.generate_bigip_uri(**uparts)
     test_value = "instance names and partitions cannot contain '/', but" +\
         " it's: %s" % uparts['partition']
-    assert II.value.message == test_value
+    assert str(II.value) == test_value
 
 
 def test_incorrect_uri_construction_illegal_tilde_partition_char(uparts):
@@ -88,7 +88,7 @@ def test_incorrect_uri_construction_illegal_tilde_partition_char(uparts):
         session.generate_bigip_uri(**uparts)
     test_value = "instance names and partitions cannot contain '~', but" +\
         " it's: %s" % uparts['partition']
-    assert II.value.message == test_value
+    assert str(II.value) == test_value
 
 
 def test_incorrect_uri_construction_illegal_suffix_nonslash_first(uparts):
@@ -97,7 +97,7 @@ def test_incorrect_uri_construction_illegal_suffix_nonslash_first(uparts):
         session.generate_bigip_uri(**uparts)
     test_value = "suffix_collections path element must start with '/', but " +\
                  "it's: %s" % uparts['suffix']
-    assert II.value.message == test_value
+    assert str(II.value) == test_value
 
 
 def test_incorrect_uri_construction_illegal_suffix_slash_last(uparts):
@@ -106,7 +106,7 @@ def test_incorrect_uri_construction_illegal_suffix_slash_last(uparts):
         session.generate_bigip_uri(**uparts)
     test_value = "suffix_collections path element must not end with '/', " +\
                  "but it's: %s" % uparts['suffix']
-    assert II.value.message == test_value
+    assert str(II.value) == test_value
 
 
 # Test uri construction
@@ -165,7 +165,7 @@ def test_wrapped_delete_207_fail(iCRS, uparts):
     with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
         iCRS.delete(uparts['base_uri'], partition='A_FOLDER_NAME',
                     name='AN_INSTANCE_NAME')
-    assert CHE.value.message.startswith('207 Unexpected Error: ')
+    assert str(CHE.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_get_success(iCRS, uparts):
@@ -188,7 +188,7 @@ def test_wrapped_get_207_fail(iCRS, uparts):
     with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
         iCRS.get(uparts['base_uri'], partition='A_FOLDER_NAME',
                  name='AN_INSTANCE_NAME')
-    assert CHE.value.message.startswith('207 Unexpected Error: ')
+    assert str(CHE.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_patch_success(iCRS, uparts):
@@ -203,7 +203,7 @@ def test_wrapped_patch_207_fail(iCRS, uparts):
     with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
         iCRS.patch(uparts['base_uri'], partition='A_FOLDER_NAME',
                    name='AN_INSTANCE_NAME')
-    assert CHE.value.message.startswith('207 Unexpected Error: ')
+    assert str(CHE.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_put_207_fail(iCRS, uparts):
@@ -211,7 +211,7 @@ def test_wrapped_put_207_fail(iCRS, uparts):
     with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
         iCRS.put(uparts['base_uri'], partition='A_FOLDER_NAME',
                  name='AN_INSTANCE_NAME')
-    assert CHE.value.message.startswith('207 Unexpected Error: ')
+    assert str(CHE.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_post_207_fail(iCRS, uparts):
@@ -219,7 +219,7 @@ def test_wrapped_post_207_fail(iCRS, uparts):
     with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
         iCRS.post(uparts['base_uri'], partition='A_FOLDER_NAME',
                   name='AN_INSTANCE_NAME')
-    assert CHE.value.message.startswith('207 Unexpected Error: ')
+    assert str(CHE.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_post_success(iCRS, uparts):
