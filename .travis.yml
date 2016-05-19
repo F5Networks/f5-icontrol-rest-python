@@ -3,6 +3,10 @@ language: python
 python:
     - "2.7"
     - "2.6"
+    - "3.3"
+    - "3.4"
+    - "3.5"
+    - "nightly"
 before_install:
     - git config --global user.email "OpenStack_TravisCI@f5.com"
     - git config --global user.name "Travis F5 Openstack"
