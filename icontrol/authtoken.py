@@ -36,7 +36,12 @@ import requests
 from requests.auth import AuthBase
 from requests.auth import HTTPBasicAuth
 import time
-import urlparse
+try:
+    # Python 3
+    from urllib.parse import urlsplit
+except ImportError:
+    # Python 2
+    from urlparse import urlsplit
 
 
 class iControlRESTTokenAuth(AuthBase):
@@ -153,7 +158,7 @@ class iControlRESTTokenAuth(AuthBase):
 
     def __call__(self, request):
         if not self._check_token_validity():
-            scheme, netloc, path, _, _ = urlparse.urlsplit(request.url)
+            scheme, netloc, path, _, _ = urlsplit(request.url)
             if scheme != "https":
                 raise InvalidScheme(scheme)
             self.get_new_token(netloc)
