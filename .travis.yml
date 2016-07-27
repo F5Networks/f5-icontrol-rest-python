@@ -1,34 +1,50 @@
-sudo: false
+sudo: true
+env:
+  global:
+  - DIST_REPO="f5-icontrol-rest-dist"
+services:
+- docker
 language: python
 python:
-    - "2.7"
-    - "2.6"
-    - "3.3"
-    - "3.4"
-    - "3.5"
-    - "nightly"
+- '2.7'
+- '2.6'
+- '3.3'
+- '3.4'
+- '3.5'
+- nightly
 before_install:
-    - git config --global user.email "OpenStack_TravisCI@f5.com"
-    - git config --global user.name "Travis F5 Openstack"
+- git config --global user.email "OpenStack_TravisCI@f5.com"
+- git config --global user.name "Travis F5 Openstack"
 install:
-    - pip install requests hacking pytest pytest-cov
+- pip install requests hacking pytest pytest-cov
 script:
-    - flake8 .
-    - py.test --cov --ignore=test/
-    - pip install -r requirements.test.txt
+- flake8 .
+- py.test --cov --ignore=test/
+- pip install -r requirements.test.txt
+- ${DIST_REPO}/scripts/package.sh "redhat" "7"
+before_deploy: PKG_VERSION=$(python -c "import icontrol; print(icontrol.__version__)")
 deploy:
-    provider: pypi
+  - provider: releases
+    api_key:
+      secure: Nc4NrVZqv5L0Ss8UQh0Glx8AKkL1NfClcvmOrg6kyj+jqnZYbqVbWN7Od8K9tp9pD613mQ86RL8vDV25wxEQY/Z0MidKuWqmM7PkriCe6ZXYhO2qB/jTouWr6ucv2xz4CZE2HRV3gJMKT6zFzKUZD2zUcojoIfzOM1KK2ggohEzkXXzpCtXFbVRB5B5WpMJ5+MQKBKGAUIF2RCiMiVRkqIfEg9dVziNNsSfXOjq5zelEIx3ePj/9/1OCrcjIpdp1SDc7soM79JDcmTyUkeUiczrZyXqw9972wI3zYDTAK/cDyPv/DzHF+N4jLOlI8j1lx8u/tgukAN98x2PqLhkxnezz1wGX17UDyQEvhCXs94+dhB20QulVfjCz+t2xaFozsC5z2C22ogRNIWtIg65x/Uj8YyO1AqNG8gmEYHErlQQGUcdyWhoApvAEF7BGFRZzlyWRBpxu3m4LKPRhahF1g3qOqVt3SHNG2uF4zJOJf+8MBG07A0QNhWCfre5sszsxUaiaePjUrABAgRijU2MPnOwaEzfnPoFH6j40CrpYhVQRn1v97e8Nk547gErIaAoATeJ4XDhAOXWj8qZrN9XBRtnu0AqVL59JtpeORAT5PWjM2bU5gUYk6CuBofdVOVo7qBWFL0nwu8hUneD5ur6t2v6TinktW4zheNNHQUFsH/4=
+    file: ${DIST_REPO}/rpms/build/f5-icontrol-rest-${PKG_VERSION}-1.el7.noarch.rpm
+    skip_cleanup: true
+    overwrite: true
+    on:
+      repo: F5Networks/f5-icontrol-rest-python
+      tags: true
+  - provider: pypi
     user: $PYPI_USER
     password: $PYPI_PASSWORD
     server: https://pypi.python.org/pypi
     on:
-        all_branches: true
-        tags: true
-        python: 2.7
+      all_branches: true
+      tags: true
+      python: 2.7
 notifications:
-    slack:
-      rooms:
-        - f5openstackdev:$SLACK_PROJECT_TOKEN
-        - f5openstackdev:$SLACK_BUILD_STATUS_TOKEN
-      on_success: change
-      on_failure: always
+  slack:
+    rooms:
+    - f5openstackdev:$SLACK_PROJECT_TOKEN
+    - f5openstackdev:$SLACK_BUILD_STATUS_TOKEN
+    on_success: change
+    on_failure: always
