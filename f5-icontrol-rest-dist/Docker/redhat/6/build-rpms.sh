@@ -1,4 +1,3 @@
-0 bash                                                                                                                                                            SEA-ML-RBROWNE  07/26  8:52pm
 #!/bin/bash -ex
 
 SRC_DIR=$1
