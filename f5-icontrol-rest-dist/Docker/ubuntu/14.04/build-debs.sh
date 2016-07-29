@@ -12,8 +12,9 @@ DIST_DIR="f5-icontrol-rest-dist/deb_dist"
 
 echo "Building ${PKG_NAME} debian packages..."
 
+cp -R "${SRC_DIR}/${DIST_DIR}/stdeb.cfg" .
 cp -R "${SRC_DIR}/${DIST_DIR}" ${TMP_DIST}
-pwd
+
 python setup.py --command-packages=stdeb.command sdist_dsc  --dist-dir=${TMP_DIST}
 pushd "${TMP_DIST}/${PKG_NAME}-${PKG_VERSION}"
 dpkg-buildpackage -rfakeroot -uc -us
