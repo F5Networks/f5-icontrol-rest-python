@@ -35,6 +35,64 @@ nat_data = {
 }
 
 
+iapp_templ_data = {
+    "name": "test_templ",
+    "partition": "Common",
+    "actions": {
+        "definition":
+        {
+            "implementation": '''tmsh::create {
+            ltm pool /Common/test_serv.app/test_pool
+            load-balancing-mode least-connections-node
+            members replace-all-with {128.0.0.2:8080{address 128.0.0.2}}
+            }''',
+            "presentation": ""
+        }
+    }
+}
+
+
+iapp_serv_data = {
+    "name": "test_serv",
+    "partition": "Common",
+    "template": "/Common/test_templ"
+}
+
+
+@pytest.fixture
+def setup_subpath(request, ICR, BASE_URL):
+    app_templ_url = BASE_URL + 'sys/application/template/'
+    app_serv_url = BASE_URL + 'sys/application/service/'
+
+    def teardown_iapp():
+        try:
+            ICR.delete(
+                app_serv_url, uri_as_parts=True,
+                name='test_serv', partition='Common',
+                subPath='test_serv.app')
+        except Exception:
+            pass
+
+        try:
+            ICR.delete(
+                app_templ_url, uri_as_parts=True,
+                name='test_templ', partition='Common')
+        except Exception:
+            pass
+
+    teardown_iapp()
+    ICR.post(app_templ_url, json=iapp_templ_data)
+    try:
+        ICR.post(app_serv_url, json=iapp_serv_data)
+    except HTTPError as ex:
+        # The creation of an iapp service does cause a 404 error in bigip
+        # versions up to but excluding 12.0
+        if ex.response.status_code == 404:
+            pass
+    request.addfinalizer(teardown_iapp)
+    return app_serv_url
+
+
 def teardown_nat(request, icr, url, name, partition):
     '''Remove the nat object that we create during a test '''
     def teardown():
@@ -67,6 +125,23 @@ def invalid_token_credentials(user, password, url):
         icr.get(url)
     return (err.value.response.status_code == 401 and
             'Authentication required!' in err.value.message)
+
+
+def test_get_with_subpath(setup_subpath, ICR, BASE_URL):
+    # The iapp creates a pool. We should be able to get that pool with subPath
+    app_serv_url = setup_subpath
+    res = ICR.get(
+        app_serv_url, name='test_serv',
+        partition='Common', subPath='test_serv.app')
+    assert res.status_code == 200
+    pool_uri = BASE_URL + 'ltm/pool/'
+    pool_res = ICR.get(
+        pool_uri, name='test_pool',
+        partition='Common', subPath='test_serv.app')
+    assert pool_res.status_code == 200
+    data = pool_res.json()
+    assert data['items'][0]['subPath'] == 'test_serv.app'
+    assert data['items'][0]['name'] == 'test_pool'
 
 
 def test_get(ICR, GET_URL):
