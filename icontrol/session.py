@@ -66,6 +66,7 @@ from icontrol.exceptions import InvalidInstanceNameOrFolder
 from icontrol.exceptions import InvalidPrefixCollection
 from icontrol.exceptions import InvalidScheme
 from icontrol.exceptions import InvalidSuffixCollection
+from icontrol.exceptions import InvalidURIComponentPart
 import logging
 import requests
 
@@ -106,19 +107,19 @@ def _validate_prefix_collections(prefix_collections):
     return True
 
 
-def _validate_name_or_partition(inst_or_partition):
+def _validate_name_partition_subpath(element):
     # '/' and '~' are illegal characters
-    if inst_or_partition == '':
+    if element == '':
         return True
-    if '~' in inst_or_partition:
+    if '~' in element:
         error_message =\
             "instance names and partitions cannot contain '~', but it's: %s"\
-            % inst_or_partition
+            % element
         raise InvalidInstanceNameOrFolder(error_message)
-    elif '/' in inst_or_partition:
+    elif '/' in element:
         error_message =\
             "instance names and partitions cannot contain '/', but it's: %s"\
-            % inst_or_partition
+            % element
         raise InvalidInstanceNameOrFolder(error_message)
     return True
 
@@ -142,17 +143,19 @@ def _validate_suffix_collections(suffix_collections):
     return True
 
 
-def _validate_uri_parts(base_uri, partition, name, suffix_collections):
+def _validate_uri_parts(
+        base_uri, partition, name, sub_path, suffix_collections):
     # Apply the above validators to the correct components.
     _validate_icruri(base_uri)
-    _validate_name_or_partition(partition)
-    _validate_name_or_partition(name)
+    _validate_name_partition_subpath(partition)
+    _validate_name_partition_subpath(name)
+    _validate_name_partition_subpath(sub_path)
     if suffix_collections:
         _validate_suffix_collections(suffix_collections)
     return True
 
 
-def generate_bigip_uri(base_uri, partition, name, suffix, **kwargs):
+def generate_bigip_uri(base_uri, partition, name, sub_path, suffix, **kwargs):
     '''(str, str, str) --> str
 
     This function checks the supplied elements to see if each conforms to
@@ -171,12 +174,19 @@ def generate_bigip_uri(base_uri, partition, name, suffix, **kwargs):
     params={'a':1}, suffix='/thwocky')
     'https://0.0.0.0/mgmt/tm/ltm/nat/thwocky'
     '''
-    _validate_uri_parts(base_uri, name, partition, suffix)
+    _validate_uri_parts(base_uri, partition, name, sub_path, suffix)
     if partition != '':
-        partition = '~'+partition
+        partition = '~' + partition
+    else:
+        if sub_path:
+            msg = 'When giving the subPath component include partition ' \
+                'as well.'
+            raise InvalidURIComponentPart(msg)
+    if sub_path != '' and partition != '':
+        sub_path = '~' + sub_path
     if name != '' and partition != '':
-        name = '~'+name
-    tilded_partition_and_instance = partition+name
+        name = '~' + name
+    tilded_partition_and_instance = partition + sub_path + name
     if suffix and not tilded_partition_and_instance:
         suffix = suffix.lstrip('/')
     REST_uri = base_uri + tilded_partition_and_instance + suffix
@@ -203,11 +213,12 @@ def decorate_HTTP_verb_method(method):
     def wrapper(self, RIC_base_uri, **kwargs):
         partition = kwargs.pop('partition', '')
         name = kwargs.pop('name', '')
+        sub_path = kwargs.pop('subPath', '')
         suffix = kwargs.pop('suffix', '')
         uri_as_parts = kwargs.pop('uri_as_parts', False)
         if uri_as_parts:
             REST_uri = generate_bigip_uri(RIC_base_uri, partition, name,
-                                          suffix, **kwargs)
+                                          sub_path, suffix, **kwargs)
         else:
             REST_uri = RIC_base_uri
         pre_message = "%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\

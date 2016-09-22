@@ -51,3 +51,9 @@ class InvalidInstanceNameOrFolder(BigIPInvalidURL):
 class InvalidSuffixCollection(BigIPInvalidURL):
     # must start with a '/' since there may be a partition or name before it
     pass
+
+
+class InvalidURIComponentPart(BigIPInvalidURL):
+    # When a consumer gives the subPath of a uri, the partition should be
+    # included as well
+    pass

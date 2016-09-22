@@ -93,3 +93,8 @@ def POST_URL(opt_bigip, opt_port):
 def FAKE_URL(opt_bigip, opt_port):
     fake_url = 'https://' + opt_bigip + ':' + opt_port + '/mgmt/tm/bogus/'
     return fake_url
+
+
+@pytest.fixture
+def BASE_URL(opt_bigip):
+    return 'https://' + opt_bigip + '/mgmt/tm/'
