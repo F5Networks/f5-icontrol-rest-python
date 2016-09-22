@@ -131,7 +131,7 @@ def test_correct_uri_construction_partitionless_subpath(uparts_with_subpath):
     uparts_with_subpath['partition'] = ''
     with pytest.raises(session.InvalidURIComponentPart) as IC:
         session.generate_bigip_uri(**uparts_with_subpath)
-    assert IC.value.message == \
+    assert str(IC.value) == \
         'When giving the subPath component include partition as well.'
 
 
@@ -162,7 +162,7 @@ def test_correct_uri_construction_partitionless_and_nameless_subpath(
     uparts_with_subpath['name'] = ''
     with pytest.raises(session.InvalidURIComponentPart) as IC:
         session.generate_bigip_uri(**uparts_with_subpath)
-    assert IC.value.message == \
+    assert str(IC.value) == \
         'When giving the subPath component include partition as well.'
 
 
@@ -181,7 +181,7 @@ def test_correct_uri_construction_partition_name_and_suffixless_subpath(
     uparts_with_subpath['suffix'] = ''
     with pytest.raises(session.InvalidURIComponentPart) as IC:
         session.generate_bigip_uri(**uparts_with_subpath)
-    assert IC.value.message == \
+    assert str(IC.value) == \
         'When giving the subPath component include partition as well.'
 
 
@@ -198,7 +198,7 @@ def test_correct_uri_construction_partitionless_and_suffixless_subpath(
     uparts_with_subpath['suffix'] = ''
     with pytest.raises(session.InvalidURIComponentPart) as IC:
         session.generate_bigip_uri(**uparts_with_subpath)
-    assert IC.value.message == \
+    assert str(IC.value) == \
         'When giving the subPath component include partition as well.'
 
 
