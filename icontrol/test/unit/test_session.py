@@ -14,6 +14,8 @@
 
 import mock
 import pytest
+import requests
+import icontrol
 
 from icontrol import session
 
@@ -353,3 +355,23 @@ def test___init__with_2_9_1_requests_pkg():
         mock_requests.__version__ = '2.9.1'
         session.iControlRESTSession('test_name', 'test_pw')
         assert mock_requests.packages.urllib3.disable_warnings.called is False
+
+
+def test_default_user_agent():
+    rest = session.iControlRESTSession('test_name', 'test_pw')
+    rresult = 'python-requests/{0}'.format(requests.__version__)
+    iresult = 'f5-icontrol-rest-python/{0}'.format(icontrol.__version__)
+    assert rresult in rest.session.headers['User-Agent']
+    assert iresult in rest.session.headers['User-Agent']
+
+
+def test_specified_user_agent():
+    agent = 'foo/1.2.3'
+    rest = session.iControlRESTSession(
+        'test_name', 'test_pw', user_agent=agent
+    )
+    rresult = 'python-requests/{0}'.format(requests.__version__)
+    iresult = 'f5-icontrol-rest-python/{0}'.format(icontrol.__version__)
+    assert rresult in rest.session.headers['User-Agent']
+    assert iresult in rest.session.headers['User-Agent']
+    assert agent in rest.session.headers['User-Agent']
