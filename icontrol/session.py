@@ -125,19 +125,19 @@ def _validate_name_partition_subpath(element):
 
 
 def _validate_suffix_collections(suffix_collections):
-    # These collections must startwith '/' since they may come after a name
+    # These collections must start with '/' since they may come after a name
     # and/or partition and I do not know whether '~partition~name/' is a legal
     # ending for a URI.
     # The suffix must not endwith '/' as it is the last component that can
     # be appended to the URI path.
     if not suffix_collections.startswith('/'):
         error_message =\
-            "suffix_collections path element must start with '/', but it's: %s"\
-            % suffix_collections
+            "suffix_collections path element must start with '/', but" \
+            " it's: %s" % suffix_collections
         raise InvalidSuffixCollection(error_message)
     if suffix_collections.endswith('/'):
         error_message =\
-            "suffix_collections path element must not end with '/', but" +\
+            "suffix_collections path element must not end with '/', but" \
             " it's: %s" % suffix_collections
         raise InvalidSuffixCollection(error_message)
     return True
