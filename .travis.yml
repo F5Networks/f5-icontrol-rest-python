@@ -3,28 +3,28 @@ env:
   global:
   - DIST_REPO="f5-icontrol-rest-dist"
 services:
-- docker
+  - docker
 language: python
 python:
-- '2.7'
-- '2.6'
-- '3.3'
-- '3.4'
-- '3.5'
-- nightly
+  - '2.7'
+  - '2.6'
+  - '3.3'
+  - '3.4'
+  - '3.5'
+  - nightly
 before_install:
-- git config --global user.email "OpenStack_TravisCI@f5.com"
-- git config --global user.name "Travis F5 Openstack"
+  - git config --global user.email "OpenStack_TravisCI@f5.com"
+  - git config --global user.name "Travis F5 Openstack"
 install:
-- pip install requests hacking pytest pytest-cov
+  - pip install -r requirements.test.txt
+  - pip install -r requirements.docs.txt
 script:
-- flake8 .
-- py.test --cov --ignore=test/
-- pip install -r requirements.test.txt
-- ${DIST_REPO}/scripts/package.sh "redhat" "7"
-- ${DIST_REPO}/scripts/package.sh "ubuntu" "14.04"
-- sudo chown -R travis:travis ${DIST_REPO}/rpms/build
-- sudo chown  travis:travis ${DIST_REPO}/deb_dist/*.deb
+  - tox -e default-flake
+  - tox -e default-unit
+  - ${DIST_REPO}/scripts/package.sh "redhat" "7"
+  - ${DIST_REPO}/scripts/package.sh "ubuntu" "14.04"
+  - sudo chown -R travis:travis ${DIST_REPO}/rpms/build
+  - sudo chown  travis:travis ${DIST_REPO}/deb_dist/*.deb
 before_deploy: PKG_VERSION=$(python -c "import icontrol; print(icontrol.__version__)")
 deploy:
   - provider: releases
@@ -49,7 +49,7 @@ deploy:
 notifications:
   slack:
     rooms:
-    - f5openstackdev:$SLACK_PROJECT_TOKEN
-    - f5openstackdev:$SLACK_BUILD_STATUS_TOKEN
+      - f5openstackdev:$SLACK_PROJECT_TOKEN
+      - f5openstackdev:$SLACK_BUILD_STATUS_TOKEN
     on_success: change
     on_failure: always
