@@ -24,7 +24,9 @@ from icontrol.session import iControlRESTSession
 from requests.exceptions import HTTPError
 
 from pprint import pprint as pp
+import icontrol
 import pytest
+import requests
 import time
 
 nat_data = {
@@ -388,3 +390,29 @@ def test_nonadmin_token_auth_invalid_username(opt_nonadmin_password,
     invalid_token_credentials('fakeuser',
                               opt_nonadmin_password,
                               GET_URL)
+
+
+def test_default_headers(opt_username, opt_password):
+    '''Test a GET request to a valid url
+
+    Pass: Returns a 200 with proper json
+    '''
+    icr = iControlRESTSession(opt_username, opt_password)
+    rresult = 'python-requests/{0}'.format(requests.__version__)
+    iresult = 'f5-icontrol-rest-python/{0}'.format(icontrol.__version__)
+    assert rresult in icr.session.headers['User-Agent']
+    assert iresult in icr.session.headers['User-Agent']
+
+
+def test_specified_headers(opt_username, opt_password):
+    '''Test a GET request to a valid url
+
+    Pass: Returns a 200 with proper json
+    '''
+    agent = 'foo/1.2.3'
+    icr = iControlRESTSession(opt_username, opt_password, user_agent=agent)
+    rresult = 'python-requests/{0}'.format(requests.__version__)
+    iresult = 'f5-icontrol-rest-python/{0}'.format(icontrol.__version__)
+    assert rresult in icr.session.headers['User-Agent']
+    assert iresult in icr.session.headers['User-Agent']
+    assert agent in icr.session.headers['User-Agent']

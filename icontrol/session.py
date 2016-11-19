@@ -58,7 +58,6 @@ against the BigIP REST Server, by pre- and post- processing the above methods.
 """
 
 from distutils.version import StrictVersion
-import functools
 from icontrol.authtoken import iControlRESTTokenAuth
 from icontrol.exceptions import iControlUnexpectedHTTPError
 from icontrol.exceptions import InvalidBigIP_ICRURI
@@ -67,6 +66,9 @@ from icontrol.exceptions import InvalidPrefixCollection
 from icontrol.exceptions import InvalidScheme
 from icontrol.exceptions import InvalidSuffixCollection
 from icontrol.exceptions import InvalidURIComponentPart
+
+import functools
+import icontrol
 import logging
 import requests
 
@@ -266,9 +268,26 @@ class iControlRESTSession(object):
         All transactions are Trust On First Use (TOFU) to the BigIP device,
         since no PKI exists for this purpose in general, hence the
         "disable_warnings" statement.
+
+        :param str username: The user to connect with.
+        :param str password: The password of the user.
+        :param int timeout: The timeout, in seconds, to wait before closing
+                            the session.
+        :param bool token: True or False, specifying whether to use token
+                           authentication or not.
+        :param str user_agent: A string to append to the user agent header
+                               that is sent during a session.
         """
+        user_agent = [
+            'python-requests/{0}'.format(requests.__version__),
+            'f5-icontrol-rest-python/{0}'.format(icontrol.__version__)
+        ]
+
         timeout = kwargs.pop('timeout', 30)
         token_auth = kwargs.pop('token', None)
+        specified_agent = kwargs.pop('user_agent', None)
+        if specified_agent:
+            user_agent.append(specified_agent)
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
         requests_version = requests.__version__
@@ -292,8 +311,11 @@ class iControlRESTSession(object):
             self.session.auth = (username, password)
 
         # Set state as indicated by ancestral code.
-        self.session.verify = False  # XXXmake TOFU
-        self.session.headers.update({'Content-Type': 'application/json'})
+        self.session.verify = False  # XXX make TOFU
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': ' '.join(user_agent)
+        })
 
     @decorate_HTTP_verb_method
     def delete(self, uri, **kwargs):
