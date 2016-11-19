@@ -9,6 +9,8 @@ Introduction
 This generic python library allows programs and other modules to
 interact with the BIG-IP® iControl® REST API.
 
+**If you want to use python to automate BIG-IP® devices via the REST API, use the  F5 SDK** (`F5Networks/f5-common-python <https://github.com/F5Networks/f5-common-python>`_).
+
 Installation
 ------------
 
@@ -23,9 +25,9 @@ Using Pip
 Installing directly from GitHub
 ```````````````````````````````
 
-**NOTE:** The example below installs the package at release v0.1.0.
+**NOTE:** The example below installs the package at release v0.1.0. Omitting the version number will install the package from the current state of the default branch.
 
-.. code:: bash
+.. code:: shell
 
     $ pip install git+ssh://git@github.com/F5Networks/f5-icontrol-rest@v0.1.0`
 
@@ -50,22 +52,25 @@ Usage
 Documentation
 -------------
 
-See `Documentation <http://icontrol.readthedocs.org>`__.
+See `Documentation <http://icontrol.readthedocs.org>`_.
+
+For Developers:
+---------------
 
 Filing Issues
--------------
+`````````````
 
 If you find an issue we would love to hear about it. Please let us know
 by filing an issue in this repository and tell us as much as you can
 about what you found and how you found it.
 
 Contributing
-------------
+````````````
 
-See `Contributing <CONTRIBUTING.md>`__.
+See `Contributing <CONTRIBUTING.md>`_.
 
 Build
------
+`````
 
 To make a PyPI package:
 
@@ -75,11 +80,11 @@ To make a PyPI package:
 
 
 Test
-----
+````
 Before you open a pull request, your code must have passing `pytest <http://pytest.org>`__ unit tests. In addition, you should include a set of functional tests written to use a real BIG-IP® for testing. Information on how to run our set of tests is included below.
 
 Unit Tests
-``````````
+~~~~~~~~~~
 
 We use pytest for our unit tests.
 
@@ -101,7 +106,7 @@ environment.
 
 
 Style Checks
-````````````
+~~~~~~~~~~~~
 We use the hacking module for our style checks (installed as part of
 step 1 in the Unit Test section).
 
