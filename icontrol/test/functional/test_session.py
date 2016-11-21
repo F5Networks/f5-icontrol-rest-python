@@ -34,6 +34,9 @@ nat_data = {
     'translationAddress': '192.168.2.1',
 }
 
+topology_data = {
+    'name': 'ldns: subnet 192.168.110.0/24  server: subnet 192.168.100.0/24'
+}
 
 iapp_templ_data = {
     "name": "test_templ",
@@ -97,6 +100,13 @@ def teardown_nat(request, icr, url, name, partition):
     '''Remove the nat object that we create during a test '''
     def teardown():
         icr.delete(url, uri_as_parts=True, name=name, partition=partition)
+    request.addfinalizer(teardown)
+
+
+def teardown_topology(request, icr, url, name):
+    """Remove the topology object that we create during a test."""
+    def teardown():
+        icr.delete(url, uri_as_parts=True, transform_name=True, name=name)
     request.addfinalizer(teardown)
 
 
@@ -388,3 +398,69 @@ def test_nonadmin_token_auth_invalid_username(opt_nonadmin_password,
     invalid_token_credentials('fakeuser',
                               opt_nonadmin_password,
                               GET_URL)
+
+
+def test_get_special_name(request, ICR, BASE_URL):
+    """Get the object with '/' characters in name
+
+    Due to a bug name kwarg needs to have space in front of "ldns" and
+    "server" key words when using GET method. We also need to catch and
+    ignore 404 response to POST due to a bug with topology creation in 11.5.4
+    """
+
+    ending = 'gtm/topology/'
+    topology_url = BASE_URL + ending
+    load_name = ' ldns: subnet 192.168.110.0/24  server: subnet ' \
+                '192.168.100.0/24'
+    teardown_topology(request, ICR, topology_url, load_name)
+    try:
+        ICR.post(topology_url, json=topology_data)
+
+    except HTTPError as err:
+        if err.response.status_code == 404:
+            pass
+        else:
+            raise
+
+    response = ICR.get(topology_url, uri_as_parts=True, transform_name=True,
+                       name=load_name)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['name'] == ' ldns: subnet 192.168.110.0/24  server: subnet ' \
+                           '192.168.100.0/24'
+    assert data['kind'] == 'tm:gtm:topology:topologystate'
+
+
+def test_delete_special_name(request, ICR, BASE_URL):
+    """Test a DELETE request to a valid url.
+
+    Pass: Return a 200 and the json is empty.  Subsequent GET returns a 404
+    error because the object is no longer found.
+    """
+    ending = 'gtm/topology/'
+    topology_url = BASE_URL + ending
+    try:
+        ICR.post(topology_url, json=topology_data)
+
+    except HTTPError as err:
+        if err.response.status_code == 404:
+            pass
+        else:
+            raise
+    response = ICR.delete(
+        topology_url,
+        name=topology_data['name'],
+        uri_as_parts=True,
+        transform_name=True)
+    assert response.status_code == 200
+    with pytest.raises(ValueError):
+        response.json()
+
+    with pytest.raises(HTTPError) as err:
+        ICR.get(
+            topology_url,
+            name=topology_data['name'],
+            uri_as_parts=True,
+            transform_name=True)
+    pp(err.value.response.status_code)
+    assert err.value.response.status_code == 404
