@@ -15,7 +15,10 @@
 import mock
 import pytest
 
+from icontrol import __version__ as VERSION
 from icontrol import session
+
+UA = 'f5-icontrol-rest-python/%s' % VERSION
 
 
 @pytest.fixture()
@@ -353,3 +356,32 @@ def test___init__with_2_9_1_requests_pkg():
         mock_requests.__version__ = '2.9.1'
         session.iControlRESTSession('test_name', 'test_pw')
         assert mock_requests.packages.urllib3.disable_warnings.called is False
+
+
+def test___init__user_agent():
+    icrs = session.iControlRESTSession('admin', 'admin')
+    assert UA in icrs.session.headers['User-Agent']
+
+
+def test__append_user_agent():
+    icrs = session.iControlRESTSession('admin', 'admin')
+    icrs.append_user_agent('test-user-agent/1.1.1')
+    assert icrs.session.headers['User-Agent'].endswith('test-user-agent/1.1.1')
+    assert UA in icrs.session.headers['User-Agent']
+
+
+def test_append_user_agent_empty_start():
+    icrs = session.iControlRESTSession('admin', 'admin')
+    icrs.session.headers['User-Agent'] = ''
+    icrs.append_user_agent('test-agent')
+    assert icrs.session.headers['User-Agent'] == 'test-agent'
+
+
+def test___init__with_additional_user_agent():
+    icrs = session.iControlRESTSession(
+        'admin',
+        'admin',
+        user_agent='test-agent/1.2.3'
+    )
+    assert icrs.session.headers['User-Agent'].endswith('test-agent/1.2.3')
+    assert 'f5-icontrol-rest-python' in icrs.session.headers['User-Agent']

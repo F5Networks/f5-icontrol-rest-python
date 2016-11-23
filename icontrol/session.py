@@ -58,7 +58,7 @@ against the BigIP REST Server, by pre- and post- processing the above methods.
 """
 
 from distutils.version import StrictVersion
-import functools
+from icontrol import __version__ as version
 from icontrol.authtoken import iControlRESTTokenAuth
 from icontrol.exceptions import iControlUnexpectedHTTPError
 from icontrol.exceptions import InvalidBigIP_ICRURI
@@ -67,6 +67,8 @@ from icontrol.exceptions import InvalidPrefixCollection
 from icontrol.exceptions import InvalidScheme
 from icontrol.exceptions import InvalidSuffixCollection
 from icontrol.exceptions import InvalidURIComponentPart
+
+import functools
 import logging
 import requests
 
@@ -266,9 +268,20 @@ class iControlRESTSession(object):
         All transactions are Trust On First Use (TOFU) to the BigIP device,
         since no PKI exists for this purpose in general, hence the
         "disable_warnings" statement.
+
+        :param str username: The user to connect with.
+        :param str password: The password of the user.
+        :param int timeout: The timeout, in seconds, to wait before closing
+                            the session.
+        :param bool token: True or False, specifying whether to use token
+                           authentication or not.
+        :param str user_agent: A string to append to the user agent header
+                              that is sent during a session.
         """
         timeout = kwargs.pop('timeout', 30)
         token_auth = kwargs.pop('token', None)
+        user_agent = kwargs.pop('user_agent', None)
+
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
         requests_version = requests.__version__
@@ -294,6 +307,11 @@ class iControlRESTSession(object):
         # Set state as indicated by ancestral code.
         self.session.verify = False  # XXXmake TOFU
         self.session.headers.update({'Content-Type': 'application/json'})
+
+        # Add a user agent for this library and any specified UA
+        self.append_user_agent('f5-icontrol-rest-python/' + version)
+        if user_agent:
+            self.append_user_agent(user_agent)
 
     @decorate_HTTP_verb_method
     def delete(self, uri, **kwargs):
@@ -409,8 +427,21 @@ class iControlRESTSession(object):
         :type json: dict
         :param name: The object name that will be appended to the uri
         :type name: str
-        :arg partition: The partition name that will be appened to the uri
+        :arg partition: The partition name that will be appended to the uri
         :type partition: str
         :param **kwargs: The :meth:`reqeusts.Session.put` optional params
         """
         return self.session.put(uri, data=data, **kwargs)
+
+    def append_user_agent(self, user_agent):
+        """Append text to the User-Agent header for the request.
+
+        Use this method to update the User-Agent header by appending the
+        given string to the session's User-Agent header separated by a space.
+
+        :param user_agent: A string to append to the User-Agent header
+        :type user_agent: str
+        """
+        old_ua = self.session.headers.get('User-Agent', '')
+        ua = old_ua + ' ' + user_agent
+        self.session.headers['User-Agent'] = ua.strip()
