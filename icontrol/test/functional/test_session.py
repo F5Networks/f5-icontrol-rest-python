@@ -35,7 +35,7 @@ nat_data = {
 }
 
 topology_data = {
-    'name': 'ldns: subnet 192.168.110.0/24  server: subnet 192.168.100.0/24'
+    'name': 'ldns: subnet 192.168.110.0/24 server: subnet 192.168.100.0/24'
 }
 
 iapp_templ_data = {
@@ -400,7 +400,7 @@ def test_nonadmin_token_auth_invalid_username(opt_nonadmin_password,
                               GET_URL)
 
 
-def test_get_special_name(request, ICR, BASE_URL):
+def test_get_special_name_11_x_12_0(request, ICR, BASE_URL):
     """Get the object with '/' characters in name
 
     Due to a bug name kwarg needs to have space in front of "ldns" and
@@ -426,8 +426,36 @@ def test_get_special_name(request, ICR, BASE_URL):
                        name=load_name)
     assert response.status_code == 200
     data = response.json()
-    assert data['name'] == ' ldns: subnet 192.168.110.0/24  server: subnet ' \
-                           '192.168.100.0/24'
+    assert data['name'] == load_name
+    assert data['kind'] == 'tm:gtm:topology:topologystate'
+
+
+def test_get_special_name_12_1(request, ICR, BASE_URL):
+    """Get the object with '/' characters in name
+
+    Since the blank space issue was fixed in 12.1.0,
+    this test had to change.
+    """
+
+    ending = 'gtm/topology/'
+    topology_url = BASE_URL + ending
+    load_name = 'ldns: subnet 192.168.110.0/24 server: subnet ' \
+                '192.168.100.0/24'
+    teardown_topology(request, ICR, topology_url, load_name)
+    try:
+        ICR.post(topology_url, json=topology_data)
+
+    except HTTPError as err:
+        if err.response.status_code == 404:
+            pass
+        else:
+            raise
+
+    response = ICR.get(topology_url, uri_as_parts=True, transform_name=True,
+                       name=load_name)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['name'] == load_name
     assert data['kind'] == 'tm:gtm:topology:topologystate'
 
 
@@ -439,6 +467,7 @@ def test_delete_special_name(request, ICR, BASE_URL):
     """
     ending = 'gtm/topology/'
     topology_url = BASE_URL + ending
+
     try:
         ICR.post(topology_url, json=topology_data)
 
@@ -447,6 +476,7 @@ def test_delete_special_name(request, ICR, BASE_URL):
             pass
         else:
             raise
+
     response = ICR.delete(
         topology_url,
         name=topology_data['name'],
@@ -462,5 +492,4 @@ def test_delete_special_name(request, ICR, BASE_URL):
             name=topology_data['name'],
             uri_as_parts=True,
             transform_name=True)
-    pp(err.value.response.status_code)
     assert err.value.response.status_code == 404
