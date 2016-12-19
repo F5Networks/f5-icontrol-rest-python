@@ -20,6 +20,7 @@ the collection objects that are after that are correct
 i.e https://192.168.1.1/mgmt/tm/boguscollection
 '''
 
+from distutils.version import LooseVersion
 from icontrol.session import iControlRESTSession
 from requests.exceptions import HTTPError
 
@@ -312,12 +313,22 @@ def test_invalid_password(opt_username, GET_URL):
     invalid_credentials(opt_username, 'fakepassword', GET_URL)
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_auth(opt_username, opt_password, GET_URL):
     icr = iControlRESTSession(opt_username, opt_password, token=True)
     response = icr.get(GET_URL)
     assert response.status_code == 200
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_auth_twice(opt_username, opt_password, GET_URL):
     icr = iControlRESTSession(opt_username, opt_password, token=True)
     assert icr.session.auth.attempts == 0
@@ -330,6 +341,11 @@ def test_token_auth_twice(opt_username, opt_password, GET_URL):
     assert icr.session.auth.attempts == 1
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_auth_expired(opt_username, opt_password, GET_URL):
     icr = iControlRESTSession(opt_username, opt_password, token=True)
     assert icr.session.auth.attempts == 0
@@ -347,10 +363,20 @@ def test_token_auth_expired(opt_username, opt_password, GET_URL):
     assert icr.session.auth.attempts == 2
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_invalid_user(opt_password, GET_URL):
     invalid_token_credentials('fakeuser', opt_password, GET_URL)
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_invalid_password(opt_username, GET_URL):
     invalid_token_credentials(opt_username, 'fakepassword', GET_URL)
 
@@ -400,6 +426,12 @@ def test_nonadmin_token_auth_invalid_username(opt_nonadmin_password,
                               GET_URL)
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) > LooseVersion(
+        '12.0.0'),
+    reason='Issue with spaces in the name parameter has been resolved post '
+           '12.1.x, therefore another test needs running'
+)
 def test_get_special_name_11_x_12_0(request, ICR, BASE_URL):
     """Get the object with '/' characters in name
 
@@ -430,6 +462,12 @@ def test_get_special_name_11_x_12_0(request, ICR, BASE_URL):
     assert data['kind'] == 'tm:gtm:topology:topologystate'
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) < LooseVersion(
+        '12.1.0'),
+    reason='Issue with paces in the name parameter has been resolved in '
+           '12.1.x and up, any lower version will fail this test otherwise'
+)
 def test_get_special_name_12_1(request, ICR, BASE_URL):
     """Get the object with '/' characters in name
 

@@ -28,6 +28,10 @@ def pytest_addoption(parser):
     parser.addoption("--password", action="store", help="BIG-IP REST password",
                      default="admin")
 
+    parser.addoption("--release", action="store",
+                     help="TMOS version, in dotted format, eg. 12.0.0",
+                     default='11.6.0')
+
     # These are optional; if not specified, tests skip.
     parser.addoption("--nonadmin-username", action="store",
                      help="BIG-IP REST username for non-admin user",
@@ -75,6 +79,11 @@ def opt_nonadmin_password(request):
 def ICR(opt_bigip, opt_username, opt_password):
     icr = iControlRESTSession(opt_username, opt_password)
     return icr
+
+
+@pytest.fixture
+def opt_release(request):
+    return request.config.getoption("--release")
 
 
 @pytest.fixture
