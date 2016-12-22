@@ -86,11 +86,22 @@ def _validate_icruri(base_uri):
     scheme, netloc, path, _, _ = urlsplit(base_uri)
     if scheme != 'https':
         raise InvalidScheme(scheme)
-    if not path.startswith('/mgmt/tm/'):
-        error_message = "The path must start with '/mgmt/tm/'!!  But it's:" +\
-            " '%s'" % path[:10]
+
+    if path.startswith('/mgmt/tm/'):
+        # Most of the time this is BIG-IP
+        sub_path = path[9:]
+    elif path.startswith('/mgmt/cm/'):
+        # This can also be in iWorkflow or BIG-IQ
+        sub_path = path[9:]
+    elif path.startswith('/mgmt/shared/'):
+        # This can be iWorkflow or BIG-IQ
+        sub_path = path[13:]
+    else:
+        error_message = "The path must start with either '/mgmt/tm/'," \
+                        "'/mgmt/cm/', or '/mgmt/shared/'!  But it's:" \
+                        " '%s'" % path
         raise InvalidBigIP_ICRURI(error_message)
-    return _validate_prefix_collections(path[9:])
+    return _validate_prefix_collections(sub_path)
 
 
 def _validate_prefix_collections(prefix_collections):
