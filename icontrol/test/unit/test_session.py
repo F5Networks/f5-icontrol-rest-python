@@ -55,6 +55,26 @@ def uparts_with_subpath():
     return parts_dict
 
 
+@pytest.fixture()
+def uparts_shared():
+    parts_dict = {'base_uri': 'https://0.0.0.0/mgmt/shared/root/RESTiface/',
+                  'partition': 'BIGCUSTOMER',
+                  'name': 'foobar1',
+                  'sub_path': '',
+                  'suffix': '/members/m1'}
+    return parts_dict
+
+
+@pytest.fixture()
+def uparts_cm():
+    parts_dict = {'base_uri': 'https://0.0.0.0/mgmt/cm/root/RESTiface/',
+                  'partition': 'BIGCUSTOMER',
+                  'name': 'foobar1',
+                  'sub_path': '',
+                  'suffix': '/members/m1'}
+    return parts_dict
+
+
 # Test invalid args
 def test_iCRS_with_invalid_construction():
     with pytest.raises(TypeError) as UTE:
@@ -74,8 +94,7 @@ def test_incorrect_uri_construction_bad_mgmt_path(uparts):
     uparts['base_uri'] = 'https://0.0.0.0/magmt/tm/root/RESTiface'
     with pytest.raises(session.InvalidBigIP_ICRURI) as IR:
         session.generate_bigip_uri(**uparts)
-    assert str(IR.value) ==\
-        "The path must start with '/mgmt/tm/'!!  But it's: '/magmt/tm/'"
+    assert "But it's: '/magmt/tm/root/RESTiface'" in str(IR.value)
 
 
 def test_incorrect_uri_construction_bad_base_nonslash_last(uparts):
@@ -218,6 +237,20 @@ def test_correct_uri_construction_nameless_and_suffixless_subpath(
     uparts_with_subpath['suffix'] = ''
     uri = session.generate_bigip_uri(**uparts_with_subpath)
     assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER~sp'
+
+
+def test_correct_uri_construction_mgmt_shared(uparts_shared):
+    uparts_shared['name'] = ''
+    uparts_shared['suffix'] = ''
+    uri = session.generate_bigip_uri(**uparts_shared)
+    assert uri == 'https://0.0.0.0/mgmt/shared/root/RESTiface/~BIGCUSTOMER'
+
+
+def test_correct_uri_construction_mgmt_cm(uparts_cm):
+    uparts_cm['name'] = ''
+    uparts_cm['suffix'] = ''
+    uri = session.generate_bigip_uri(**uparts_cm)
+    assert uri == 'https://0.0.0.0/mgmt/cm/root/RESTiface/~BIGCUSTOMER'
 
 
 # Test exception handling
