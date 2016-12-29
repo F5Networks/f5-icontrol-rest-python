@@ -86,11 +86,22 @@ def _validate_icruri(base_uri):
     scheme, netloc, path, _, _ = urlsplit(base_uri)
     if scheme != 'https':
         raise InvalidScheme(scheme)
-    if not path.startswith('/mgmt/tm/'):
-        error_message = "The path must start with '/mgmt/tm/'!!  But it's:" +\
-            " '%s'" % path[:10]
+
+    if path.startswith('/mgmt/tm/'):
+        # Most of the time this is BIG-IP
+        sub_path = path[9:]
+    elif path.startswith('/mgmt/cm/'):
+        # This can also be in iWorkflow or BIG-IQ
+        sub_path = path[9:]
+    elif path.startswith('/mgmt/shared/'):
+        # This can be iWorkflow or BIG-IQ
+        sub_path = path[13:]
+    else:
+        error_message = "The path must start with either '/mgmt/tm/'," \
+                        "'/mgmt/cm/', or '/mgmt/shared/'!  But it's:" \
+                        " '%s'" % path
         raise InvalidBigIP_ICRURI(error_message)
-    return _validate_prefix_collections(path[9:])
+    return _validate_prefix_collections(sub_path)
 
 
 def _validate_prefix_collections(prefix_collections):
@@ -229,9 +240,9 @@ def decorate_HTTP_verb_method(method):
     @functools.wraps(method)
     def wrapper(self, RIC_base_uri, **kwargs):
         partition = kwargs.pop('partition', '')
-        name = kwargs.pop('name', '')
         sub_path = kwargs.pop('subPath', '')
         suffix = kwargs.pop('suffix', '')
+        identifier, kwargs = _unique_resource_identifier_from_kwargs(**kwargs)
         uri_as_parts = kwargs.pop('uri_as_parts', False)
         transform_name = kwargs.pop('transform_name', False)
         if uri_as_parts:
@@ -261,6 +272,46 @@ def decorate_HTTP_verb_method(method):
             raise iControlUnexpectedHTTPError(error_message, response=response)
         return response
     return wrapper
+
+
+def _unique_resource_identifier_from_kwargs(**kwargs):
+    """Chooses an identifier given different choices
+
+    The unique identifier in BIG-IP's REST API at the time of this writing
+    is called 'name'. This is in contrast to the unique identifier that is
+    used by iWorkflow and BIG-IQ which at some times is 'name' and other
+    times is 'uuid'.
+
+    For example, in iWorkflow, there consider this URI
+
+      * https://10.2.2.3/mgmt/cm/cloud/tenants/{0}/services/iapp
+
+    Then consider this iWorkflow URI
+
+      * https://localhost/mgmt/cm/cloud/connectors/local/{0}
+
+    In the first example, the identifier, {0}, is what we would normally
+    consider a name. For example, "tenant1". In the second example though,
+    the value is expected to be what we would normally consider to be a
+    UUID. For example, '244bd478-374e-4eb2-8c73-6e46d7112604'.
+
+    This method only tries to rectify the problem of which to use.
+
+    I believe there might be some change that the two can appear together,
+    although I have not yet experienced it. If it is possible, I believe it
+    would happen in BIG-IQ/iWorkflow land where the UUID and Name both have
+    significance. That's why I deliberately prefer the UUID when it exists
+    in the parameters sent to the URL.
+
+    :param kwargs:
+    :return:
+    """
+    name = kwargs.pop('name', '')
+    uuid = kwargs.pop('uuid', '')
+    if uuid:
+        return uuid, kwargs
+    else:
+        return name, kwargs
 
 
 class iControlRESTSession(object):
