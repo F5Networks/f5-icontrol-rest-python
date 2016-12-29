@@ -362,8 +362,8 @@ def test_correct_uri_transformed_nameless_and_suffixless_subpath(
     transform_name_w_subpath['suffix'] = ''
     uri = session.generate_bigip_uri(**transform_name_w_subpath)
     assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER~sp'
-    
-    
+
+
 def test_correct_uri_construction_mgmt_shared(uparts_shared):
     uparts_shared['name'] = ''
     uparts_shared['suffix'] = ''
@@ -376,7 +376,6 @@ def test_correct_uri_construction_mgmt_cm(uparts_cm):
     uparts_cm['suffix'] = ''
     uri = session.generate_bigip_uri(**uparts_cm)
     assert uri == 'https://0.0.0.0/mgmt/cm/root/RESTiface/~BIGCUSTOMER'
-
 
 
 # Test exception handling
