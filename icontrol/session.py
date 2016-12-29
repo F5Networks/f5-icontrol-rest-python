@@ -246,7 +246,7 @@ def decorate_HTTP_verb_method(method):
         uri_as_parts = kwargs.pop('uri_as_parts', False)
         transform_name = kwargs.pop('transform_name', False)
         if uri_as_parts:
-            REST_uri = generate_bigip_uri(RIC_base_uri, partition, name,
+            REST_uri = generate_bigip_uri(RIC_base_uri, partition, identifier,
                                           sub_path, suffix,
                                           transform_name=transform_name,
                                           **kwargs)
