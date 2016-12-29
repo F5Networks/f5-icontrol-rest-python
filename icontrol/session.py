@@ -164,7 +164,7 @@ def _validate_uri_parts(
     # Apply the above validators to the correct components.
     _validate_icruri(base_uri)
     _validate_name_partition_subpath(partition)
-    if not kwargs['transform_name']:
+    if not kwargs.get('transform_name', False):
         _validate_name_partition_subpath(name)
     _validate_name_partition_subpath(sub_path)
     if suffix_collections:
@@ -199,7 +199,7 @@ def generate_bigip_uri(base_uri, partition, name, sub_path, suffix, **kwargs):
     _validate_uri_parts(base_uri, partition, name, sub_path, suffix,
                         **kwargs)
 
-    if kwargs['transform_name']:
+    if kwargs.get('transform_name', False):
         if name != '':
             name = name.replace('/', '~')
     if partition != '':
