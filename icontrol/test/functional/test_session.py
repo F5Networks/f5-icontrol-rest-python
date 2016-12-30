@@ -20,6 +20,7 @@ the collection objects that are after that are correct
 i.e https://192.168.1.1/mgmt/tm/boguscollection
 '''
 
+from distutils.version import LooseVersion
 from icontrol.session import iControlRESTSession
 from requests.exceptions import HTTPError
 
@@ -34,6 +35,9 @@ nat_data = {
     'translationAddress': '192.168.2.1',
 }
 
+topology_data = {
+    'name': 'ldns: subnet 192.168.110.0/24 server: subnet 192.168.100.0/24'
+}
 
 iapp_templ_data = {
     "name": "test_templ",
@@ -97,6 +101,13 @@ def teardown_nat(request, icr, url, name, partition):
     '''Remove the nat object that we create during a test '''
     def teardown():
         icr.delete(url, uri_as_parts=True, name=name, partition=partition)
+    request.addfinalizer(teardown)
+
+
+def teardown_topology(request, icr, url, name):
+    """Remove the topology object that we create during a test."""
+    def teardown():
+        icr.delete(url, uri_as_parts=True, transform_name=True, name=name)
     request.addfinalizer(teardown)
 
 
@@ -302,12 +313,22 @@ def test_invalid_password(opt_username, GET_URL):
     invalid_credentials(opt_username, 'fakepassword', GET_URL)
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_auth(opt_username, opt_password, GET_URL):
     icr = iControlRESTSession(opt_username, opt_password, token=True)
     response = icr.get(GET_URL)
     assert response.status_code == 200
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_auth_twice(opt_username, opt_password, GET_URL):
     icr = iControlRESTSession(opt_username, opt_password, token=True)
     assert icr.session.auth.attempts == 0
@@ -320,6 +341,11 @@ def test_token_auth_twice(opt_username, opt_password, GET_URL):
     assert icr.session.auth.attempts == 1
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_auth_expired(opt_username, opt_password, GET_URL):
     icr = iControlRESTSession(opt_username, opt_password, token=True)
     assert icr.session.auth.attempts == 0
@@ -337,10 +363,20 @@ def test_token_auth_expired(opt_username, opt_password, GET_URL):
     assert icr.session.auth.attempts == 2
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_invalid_user(opt_password, GET_URL):
     invalid_token_credentials('fakeuser', opt_password, GET_URL)
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) == LooseVersion(
+        '11.5.4'),
+    reason='Endpoint does not exist in 11.5.4'
+)
 def test_token_invalid_password(opt_username, GET_URL):
     invalid_token_credentials(opt_username, 'fakepassword', GET_URL)
 
@@ -388,3 +424,110 @@ def test_nonadmin_token_auth_invalid_username(opt_nonadmin_password,
     invalid_token_credentials('fakeuser',
                               opt_nonadmin_password,
                               GET_URL)
+
+
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) > LooseVersion(
+        '12.0.0'),
+    reason='Issue with spaces in the name parameter has been resolved post '
+           '12.1.x, therefore another test needs running'
+)
+def test_get_special_name_11_x_12_0(request, ICR, BASE_URL):
+    """Get the object with '/' characters in name
+
+    Due to a bug name kwarg needs to have space in front of "ldns" and
+    "server" key words when using GET method. We also need to catch and
+    ignore 404 response to POST due to a bug with topology creation in 11.5.4
+    """
+
+    ending = 'gtm/topology/'
+    topology_url = BASE_URL + ending
+    load_name = ' ldns: subnet 192.168.110.0/24  server: subnet ' \
+                '192.168.100.0/24'
+    teardown_topology(request, ICR, topology_url, load_name)
+    try:
+        ICR.post(topology_url, json=topology_data)
+
+    except HTTPError as err:
+        if err.response.status_code == 404:
+            pass
+        else:
+            raise
+
+    response = ICR.get(topology_url, uri_as_parts=True, transform_name=True,
+                       name=load_name)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['name'] == load_name
+    assert data['kind'] == 'tm:gtm:topology:topologystate'
+
+
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) < LooseVersion(
+        '12.1.0'),
+    reason='Issue with paces in the name parameter has been resolved in '
+           '12.1.x and up, any lower version will fail this test otherwise'
+)
+def test_get_special_name_12_1(request, ICR, BASE_URL):
+    """Get the object with '/' characters in name
+
+    Since the blank space issue was fixed in 12.1.0,
+    this test had to change.
+    """
+
+    ending = 'gtm/topology/'
+    topology_url = BASE_URL + ending
+    load_name = 'ldns: subnet 192.168.110.0/24 server: subnet ' \
+                '192.168.100.0/24'
+    teardown_topology(request, ICR, topology_url, load_name)
+    try:
+        ICR.post(topology_url, json=topology_data)
+
+    except HTTPError as err:
+        if err.response.status_code == 404:
+            pass
+        else:
+            raise
+
+    response = ICR.get(topology_url, uri_as_parts=True, transform_name=True,
+                       name=load_name)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['name'] == load_name
+    assert data['kind'] == 'tm:gtm:topology:topologystate'
+
+
+def test_delete_special_name(request, ICR, BASE_URL):
+    """Test a DELETE request to a valid url.
+
+    Pass: Return a 200 and the json is empty.  Subsequent GET returns a 404
+    error because the object is no longer found.
+    """
+    ending = 'gtm/topology/'
+    topology_url = BASE_URL + ending
+
+    try:
+        ICR.post(topology_url, json=topology_data)
+
+    except HTTPError as err:
+        if err.response.status_code == 404:
+            pass
+        else:
+            raise
+
+    response = ICR.delete(
+        topology_url,
+        name=topology_data['name'],
+        uri_as_parts=True,
+        transform_name=True)
+    assert response.status_code == 200
+    with pytest.raises(ValueError):
+        response.json()
+
+    with pytest.raises(HTTPError) as err:
+        ICR.get(
+            topology_url,
+            name=topology_data['name'],
+            uri_as_parts=True,
+            transform_name=True)
+    assert err.value.response.status_code == 404

@@ -41,7 +41,19 @@ def uparts():
                   'partition': 'BIGCUSTOMER',
                   'name': 'foobar1',
                   'sub_path': '',
-                  'suffix': '/members/m1'}
+                  'suffix': '/members/m1',
+                  'transform_name': False}
+    return parts_dict
+
+
+@pytest.fixture()
+def transform_name():
+    parts_dict = {'base_uri': 'https://0.0.0.0/mgmt/tm/root/RESTiface/',
+                  'partition': 'BIGCUSTOMER',
+                  'name': 'foobar1: 1.1.1.1/24 bar1: /Common/DC1',
+                  'sub_path': '',
+                  'suffix': '/members/m1',
+                  'transform_name': True}
     return parts_dict
 
 
@@ -51,7 +63,19 @@ def uparts_with_subpath():
                   'partition': 'BIGCUSTOMER',
                   'name': 'foobar1',
                   'sub_path': 'sp',
-                  'suffix': '/members/m1'}
+                  'suffix': '/members/m1',
+                  'transform_name': False}
+    return parts_dict
+
+
+@pytest.fixture()
+def transform_name_w_subpath():
+    parts_dict = {'base_uri': 'https://0.0.0.0/mgmt/tm/root/RESTiface/',
+                  'partition': 'BIGCUSTOMER',
+                  'name': 'foobar1: 1.1.1.1/24 bar1: /Common/DC1',
+                  'sub_path': 'sp',
+                  'suffix': '/members/m1',
+                  'transform_name': True}
     return parts_dict
 
 
@@ -236,6 +260,107 @@ def test_correct_uri_construction_nameless_and_suffixless_subpath(
     uparts_with_subpath['name'] = ''
     uparts_with_subpath['suffix'] = ''
     uri = session.generate_bigip_uri(**uparts_with_subpath)
+    assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER~sp'
+
+
+def test_correct_uri_construction_partitionless_transform_name(transform_name):
+    transform_name['partition'] = ''
+    uri = session.generate_bigip_uri(**transform_name)
+    assert uri == \
+        'https://0.0.0.0/mgmt/tm/root/RESTiface/foobar1: ' \
+        '1.1.1.1~24 bar1: ~Common~DC1/members/m1'
+
+
+def test_correct_uri_transformed_partitionless_subpath(
+        transform_name_w_subpath):
+    transform_name_w_subpath['partition'] = ''
+    with pytest.raises(session.InvalidURIComponentPart) as IC:
+        session.generate_bigip_uri(**transform_name_w_subpath)
+    assert str(IC.value) == \
+        'When giving the subPath component include partition as well.'
+
+
+def test_correct_uri_transformed_nameless(transform_name):
+    transform_name['name'] = ''
+    uri = session.generate_bigip_uri(**transform_name)
+    assert uri ==\
+        "https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER/members/m1"
+
+
+def test_correct_uri_transformed_nameless_subpath(transform_name_w_subpath):
+    transform_name_w_subpath['name'] = ''
+    uri = session.generate_bigip_uri(**transform_name_w_subpath)
+    assert uri ==\
+        "https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER~sp/members/m1"
+
+
+def test_correct_uri_transformed_partitionless_and_nameless(transform_name):
+    transform_name['partition'] = ''
+    transform_name['name'] = ''
+    uri = session.generate_bigip_uri(**transform_name)
+    assert uri == "https://0.0.0.0/mgmt/tm/root/RESTiface/members/m1"
+
+
+def test_correct_uri_transformed_partitionless_and_nameless_subpath(
+        transform_name_w_subpath):
+    transform_name_w_subpath['partition'] = ''
+    transform_name_w_subpath['name'] = ''
+    with pytest.raises(session.InvalidURIComponentPart) as IC:
+        session.generate_bigip_uri(**transform_name_w_subpath)
+    assert str(IC.value) == \
+        'When giving the subPath component include partition as well.'
+
+
+def test_correct_uri_transformed_partition_name_and_suffixless(transform_name):
+    transform_name['partition'] = ''
+    transform_name['name'] = ''
+    transform_name['suffix'] = ''
+    uri = session.generate_bigip_uri(**transform_name)
+    assert uri == "https://0.0.0.0/mgmt/tm/root/RESTiface/"
+
+
+def test_correct_uri_transformed_partition_name_and_suffixless_subpath(
+        transform_name_w_subpath):
+    transform_name_w_subpath['partition'] = ''
+    transform_name_w_subpath['name'] = ''
+    transform_name_w_subpath['suffix'] = ''
+    with pytest.raises(session.InvalidURIComponentPart) as IC:
+        session.generate_bigip_uri(**transform_name_w_subpath)
+    assert str(IC.value) == \
+        'When giving the subPath component include partition as well.'
+
+
+def test_correct_uri_transformed_partitionless_and_suffixless(transform_name):
+    transform_name['partition'] = ''
+    transform_name['suffix'] = ''
+    uri = session.generate_bigip_uri(**transform_name)
+    assert uri == \
+        'https://0.0.0.0/mgmt/tm/root/RESTiface/foobar1: ' \
+        '1.1.1.1~24 bar1: ~Common~DC1'
+
+
+def test_correct_uri_transformed_partitionless_and_suffixless_subpath(
+        transform_name_w_subpath):
+    transform_name_w_subpath['partition'] = ''
+    transform_name_w_subpath['suffix'] = ''
+    with pytest.raises(session.InvalidURIComponentPart) as IC:
+        session.generate_bigip_uri(**transform_name_w_subpath)
+    assert str(IC.value) == \
+        'When giving the subPath component include partition as well.'
+
+
+def test_correct_uri_transformed_nameless_and_suffixless(transform_name):
+    transform_name['name'] = ''
+    transform_name['suffix'] = ''
+    uri = session.generate_bigip_uri(**transform_name)
+    assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER'
+
+
+def test_correct_uri_transformed_nameless_and_suffixless_subpath(
+        transform_name_w_subpath):
+    transform_name_w_subpath['name'] = ''
+    transform_name_w_subpath['suffix'] = ''
+    uri = session.generate_bigip_uri(**transform_name_w_subpath)
     assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER~sp'
 
 

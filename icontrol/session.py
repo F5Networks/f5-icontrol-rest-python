@@ -121,7 +121,9 @@ def _validate_prefix_collections(prefix_collections):
 
 
 def _validate_name_partition_subpath(element):
-    # '/' and '~' are illegal characters
+    # '/' and '~' are illegal characters in most cases, however there are
+    # few exceptions (GTM Regions endpoint being one of them where the
+    # validation of name should not apply.
     if element == '':
         return True
     if '~' in element:
@@ -157,11 +159,13 @@ def _validate_suffix_collections(suffix_collections):
 
 
 def _validate_uri_parts(
-        base_uri, partition, name, sub_path, suffix_collections):
+        base_uri, partition, name, sub_path, suffix_collections,
+        **kwargs):
     # Apply the above validators to the correct components.
     _validate_icruri(base_uri)
     _validate_name_partition_subpath(partition)
-    _validate_name_partition_subpath(name)
+    if not kwargs.get('transform_name', False):
+        _validate_name_partition_subpath(name)
     _validate_name_partition_subpath(sub_path)
     if suffix_collections:
         _validate_suffix_collections(suffix_collections)
@@ -172,7 +176,7 @@ def generate_bigip_uri(base_uri, partition, name, sub_path, suffix, **kwargs):
     '''(str, str, str) --> str
 
     This function checks the supplied elements to see if each conforms to
-    the specifiction for the appropriate part of the URI. These validations
+    the specification for the appropriate part of the URI. These validations
     are conducted by the helper function _validate_uri_parts.
     After validation the parts are assembled into a valid BigIP REST URI
     string which is then submitted with appropriate metadata.
@@ -186,8 +190,18 @@ def generate_bigip_uri(base_uri, partition, name, sub_path, suffix, **kwargs):
     >>> generate_bigip_uri('https://0.0.0.0/mgmt/tm/ltm/nat/', '', '', \
     params={'a':1}, suffix='/thwocky')
     'https://0.0.0.0/mgmt/tm/ltm/nat/thwocky'
+
+    ::Warning: There are cases where '/' and '~' characters are valid in the
+        object name. This is indicated by passing 'transform_name' boolean as
+        True, by default this is set to False.
     '''
-    _validate_uri_parts(base_uri, partition, name, sub_path, suffix)
+
+    _validate_uri_parts(base_uri, partition, name, sub_path, suffix,
+                        **kwargs)
+
+    if kwargs.get('transform_name', False):
+        if name != '':
+            name = name.replace('/', '~')
     if partition != '':
         partition = '~' + partition
     else:
@@ -202,6 +216,7 @@ def generate_bigip_uri(base_uri, partition, name, sub_path, suffix, **kwargs):
     tilded_partition_and_instance = partition + sub_path + name
     if suffix and not tilded_partition_and_instance:
         suffix = suffix.lstrip('/')
+
     REST_uri = base_uri + tilded_partition_and_instance + suffix
     return REST_uri
 
@@ -229,9 +244,12 @@ def decorate_HTTP_verb_method(method):
         suffix = kwargs.pop('suffix', '')
         identifier, kwargs = _unique_resource_identifier_from_kwargs(**kwargs)
         uri_as_parts = kwargs.pop('uri_as_parts', False)
+        transform_name = kwargs.pop('transform_name', False)
         if uri_as_parts:
             REST_uri = generate_bigip_uri(RIC_base_uri, partition, identifier,
-                                          sub_path, suffix, **kwargs)
+                                          sub_path, suffix,
+                                          transform_name=transform_name,
+                                          **kwargs)
         else:
             REST_uri = RIC_base_uri
         pre_message = "%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
