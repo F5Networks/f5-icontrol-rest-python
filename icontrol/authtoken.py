@@ -92,7 +92,7 @@ class iControlRESTTokenAuth(AuthBase):
             'loginProviderName': self.login_provider_name,
         }
         login_url = "https://%s/mgmt/shared/authn/login" % (netloc)
-        req_start_time = time.time()
+
         response = requests.post(login_url,
                                  json=login_body,
                                  verify=False,
@@ -109,13 +109,13 @@ class iControlRESTTokenAuth(AuthBase):
                                               response=response)
         respJson = response.json()
 
-        expiration_bigip, created_bigip = None, None
+        token = self._get_token_from_response(respJson)
+        created_bigip = self._get_last_update_micros(token)
+
         try:
-            self.token = respJson['token']['token']
-            expiration_bigip = int(respJson['token']['expirationMicros']) / \
-                1000000.0
-            created_bigip = int(respJson['token']['lastUpdateMicros']) / \
-                1000000.0
+            expiration_bigip = self._get_expiration_micros(
+                token, created_bigip
+            )
         except (KeyError, ValueError):
             error_message = \
                 '%s Unparseable Response: %s for uri: %s\nText: %r' %\
@@ -126,17 +126,11 @@ class iControlRESTTokenAuth(AuthBase):
             raise iControlUnexpectedHTTPError(error_message,
                                               response=response)
 
-        # Set our token expiration time.
-        # The expirationMicros field is when BIG-IP will expire the token
-        # relative to its local clock.  To avoid issues caused by incorrect
-        # clocks or network latency, we'll compute an expiration time that is
-        # referenced to our local clock, and expires slightly before the token
-        # should actually expire on BIG-IP
-
-        # Reference to our clock: compute for how long this token is valid as
-        # the difference between when it expires and when it was created,
-        # according to BIG-IP.
-        if expiration_bigip < created_bigip:
+        try:
+            self.expiration = self._get_token_expiration_time(
+                created_bigip, expiration_bigip
+            )
+        except iControlUnexpectedHTTPError:
             error_message = \
                 '%s Token already expired: %s for uri: %s\nText: %r' % \
                 (response.status_code,
@@ -145,8 +139,33 @@ class iControlRESTTokenAuth(AuthBase):
                  response.text)
             raise iControlUnexpectedHTTPError(error_message,
                                               response=response)
-        valid_duration = expiration_bigip - created_bigip
 
+    def _get_expiration_micros(self, token, created_bigip=None):
+        if 'expirationMicros' in token:
+            expiration = token['expirationMicros']
+            expiration_bigip = int(expiration) / 1000000.0
+        elif 'timeout' in token:
+            expiration_bigip = created_bigip + token['timeout']
+        else:
+            raise iControlUnexpectedHTTPError
+        return expiration_bigip
+
+    def _get_token_expiration_time(self, created_bigip, expiration_bigip):
+        req_start_time = time.time()
+
+        # Set our token expiration time.
+        # The expirationMicros field is when BIG-IP will expire the token
+        # relative to its local clock.  To avoid issues caused by incorrect
+        # clocks or network latency, we'll compute an expiration time that is
+        # referenced to our local clock, and expires slightly before the token
+        # should actually expire on BIG-IP
+        # Reference to our clock: compute for how long this token is valid as
+        # the difference between when it expires and when it was created,
+        # according to BIG-IP.
+        if expiration_bigip < created_bigip:
+            raise iControlUnexpectedHTTPError
+
+        valid_duration = expiration_bigip - created_bigip
         # Assign new expiration time that is 1 minute earlier than BIG-IP's
         # expiration time, as long as that would still be at least a minute in
         # the future.  This should account for clock skew between us and
@@ -154,7 +173,27 @@ class iControlRESTTokenAuth(AuthBase):
         # 59 minutes instead of 60 is harmless.
         if valid_duration > 120.0:
             valid_duration -= 60.0
-        self.expiration = req_start_time + valid_duration
+        return req_start_time + valid_duration
+
+    def _get_last_update_micros(self, token):
+        try:
+            last_updated = token['lastUpdateMicros']
+            created_bigip = int(last_updated) / 1000000.0
+        except (KeyError, ValueError):
+            raise iControlUnexpectedHTTPError(
+                "lastUpdateMicros field was not found in the response"
+            )
+        return created_bigip
+
+    def _get_token_from_response(self, respJson):
+        try:
+            token = respJson['token']
+            self.token = token['token']
+        except KeyError:
+            raise iControlUnexpectedHTTPError(
+                "Token field not found in the response"
+            )
+        return token
 
     def __call__(self, request):
         if not self._check_token_validity():
