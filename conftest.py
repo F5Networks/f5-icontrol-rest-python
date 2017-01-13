@@ -105,5 +105,5 @@ def FAKE_URL(opt_bigip, opt_port):
 
 
 @pytest.fixture
-def BASE_URL(opt_bigip):
-    return 'https://' + opt_bigip + '/mgmt/tm/'
+def BASE_URL(opt_bigip, opt_port):
+    return 'https://' + opt_bigip + ':' + opt_port + '/mgmt/tm/'
