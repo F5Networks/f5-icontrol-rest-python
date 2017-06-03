@@ -39,6 +39,9 @@ def pytest_addoption(parser):
     parser.addoption("--nonadmin-password", action="store",
                      help="BIG-IP REST password for non-admin user",
                      default=None)
+    parser.addoption("--ca-bundle", action="store",
+                     help="CA bundle that verifies the BIG-IP certificate",
+                     default=None)
 
 
 def pytest_generate_tests(metafunc):
@@ -73,6 +76,10 @@ def opt_nonadmin_username(request):
 @pytest.fixture
 def opt_nonadmin_password(request):
     return request.config.getoption("--nonadmin-password")
+
+@pytest.fixture
+def opt_ca_bundle(request):
+    return request.config.getoption("--ca-bundle")
 
 
 @pytest.fixture

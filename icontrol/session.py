@@ -346,7 +346,10 @@ class iControlRESTSession(object):
                            authentication or not.
         :param str user_agent: A string to append to the user agent header
                               that is sent during a session.
+        :param str verify: The path to a CA bundle containing the
+                              CA certificate for SSL validation
         """
+        verify = kwargs.pop('verify', False)
         timeout = kwargs.pop('timeout', 30)
         token_auth = kwargs.pop('token', None)
         user_agent = kwargs.pop('user_agent', None)
@@ -365,16 +368,18 @@ class iControlRESTSession(object):
 
         # Handle token-based auth.
         if token_auth is True:
-            self.session.auth = iControlRESTTokenAuth(username, password)
+            self.session.auth = iControlRESTTokenAuth(username, password,
+                                                      verify=verify)
         elif token_auth:  # Truthy but not true: non-default loginAuthProvider
             self.session.auth = iControlRESTTokenAuth(username,
                                                       password,
-                                                      token_auth)
+                                                      token_auth,
+                                                      verify=verify)
         else:
             self.session.auth = (username, password)
 
         # Set state as indicated by ancestral code.
-        self.session.verify = False  # XXXmake TOFU
+        self.session.verify = verify
         self.session.headers.update({'Content-Type': 'application/json'})
 
         # Add a user agent for this library and any specified UA

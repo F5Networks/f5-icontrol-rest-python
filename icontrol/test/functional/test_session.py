@@ -22,9 +22,11 @@ i.e https://192.168.1.1/mgmt/tm/boguscollection
 
 from distutils.version import LooseVersion
 from icontrol.session import iControlRESTSession
-from requests.exceptions import HTTPError
+from icontrol.authtoken import iControlRESTTokenAuth
+from requests.exceptions import HTTPError, SSLError
 
 from pprint import pprint as pp
+import os
 import pytest
 import time
 
@@ -531,3 +533,34 @@ def test_delete_special_name(request, ICR, BASE_URL):
             uri_as_parts=True,
             transform_name=True)
     assert err.value.response.status_code == 404
+
+
+def test_ssl_verify(opt_username, opt_password, GET_URL, opt_ca_bundle):
+    """Test connection with a trusted certificate"""
+    if not opt_ca_bundle:
+        pytest.skip("No CA bundle configured")
+    icr = iControlRESTSession(opt_username, opt_password,
+                              token=True, verify=opt_ca_bundle)
+    icr.get(GET_URL)
+
+
+def test_ssl_verify_fail(opt_username, opt_password, GET_URL):
+    """Test connection with an untrusted certificate"""
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    ca_bundle = '%s/dummy-ca-cert.pem' % dir_path
+    icr = iControlRESTSession(opt_username, opt_password,
+                              verify=ca_bundle)
+    with pytest.raises(SSLError) as excinfo:
+        icr.get(GET_URL)
+    assert 'certificate verify failed' in str(excinfo.value)
+
+
+def test_get_token_ssl_verify_fail(opt_username, opt_password, opt_bigip):
+    """Test token retrival with an untrusted certificate"""
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    ca_bundle = '%s/dummy-ca-cert.pem' % dir_path
+    icr = iControlRESTTokenAuth(opt_username, opt_password,
+                                verify=ca_bundle)
+    with pytest.raises(SSLError) as excinfo:
+        icr.get_new_token(opt_bigip)
+    assert 'certificate verify failed' in str(excinfo.value)

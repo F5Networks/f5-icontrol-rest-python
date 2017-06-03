@@ -51,6 +51,8 @@ class iControlRESTTokenAuth(AuthBase):
     :param str password: The password for username on BigIP
     :param str login_provider_name: The name of the login provider that \
     BigIP should consult when creating the token.
+    :param str verify: The path to a CA bundle containing the \
+    CA certificate for SSL validation
 
     If ``username`` is configured locally on the BigIP,
     ``login_provider_name`` should be ``"tmos"`` (default).  Otherwise
@@ -58,13 +60,15 @@ class iControlRESTTokenAuth(AuthBase):
     consult BigIP documentation or your system administrator for the value
     of ``login_provider_name``.
     """
-    def __init__(self, username, password, login_provider_name='tmos'):
+    def __init__(self, username, password, login_provider_name='tmos',
+                 verify=False):
         self.username = username
         self.password = password
         self.login_provider_name = login_provider_name
         self.token = None
         self.expiration = None
         self.attempts = 0
+        self.verify = verify
         # We don't actually do auth at this point because we don't have a
         # hostname to authenticate to.
 
@@ -95,7 +99,7 @@ class iControlRESTTokenAuth(AuthBase):
 
         response = requests.post(login_url,
                                  json=login_body,
-                                 verify=False,
+                                 verify=self.verify,
                                  auth=HTTPBasicAuth(self.username,
                                                     self.password))
         self.attempts += 1

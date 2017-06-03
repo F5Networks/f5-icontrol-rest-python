@@ -543,3 +543,16 @@ def test___init__with_additional_user_agent():
     )
     assert icrs.session.headers['User-Agent'].endswith('test-agent/1.2.3')
     assert 'f5-icontrol-rest-python' in icrs.session.headers['User-Agent']
+
+
+def test__init__without_verify():
+    icrs = session.iControlRESTSession('test_name', 'test_pw', token=True)
+    assert icrs.session.verify is False
+    assert icrs.session.auth.verify is False
+
+
+def test__init__with_verify():
+    icrs = session.iControlRESTSession('test_name', 'test_pw',
+                                       token=True, verify='/path/to/cert')
+    assert icrs.session.verify is '/path/to/cert'
+    assert icrs.session.auth.verify is '/path/to/cert'
