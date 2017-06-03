@@ -77,6 +77,7 @@ def opt_nonadmin_username(request):
 def opt_nonadmin_password(request):
     return request.config.getoption("--nonadmin-password")
 
+
 @pytest.fixture
 def opt_ca_bundle(request):
     return request.config.getoption("--ca-bundle")
