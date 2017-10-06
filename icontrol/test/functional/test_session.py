@@ -564,3 +564,67 @@ def test_get_token_ssl_verify_fail(opt_username, opt_password, opt_bigip):
     with pytest.raises(SSLError) as excinfo:
         icr.get_new_token(opt_bigip)
     assert 'certificate verify failed' in str(excinfo.value)
+
+
+def test_using_stashed_tokens(GET_URL, opt_bigip, opt_username, opt_password):
+    icr1 = iControlRESTSession(opt_username, opt_password, token='tmos')
+    icr2 = iControlRESTSession(opt_username, opt_password, token='tmos')
+
+    # Trigger token creation
+    icr1.get(GET_URL)
+    icr2.get(GET_URL)
+
+    # Ensure we have two completely different sessions here
+    assert icr1.token != icr2.token
+
+    # Ensure that both of them are valid
+    response = icr1.get(GET_URL)
+    assert response.status_code == 200
+    assert response.json()
+    response = icr2.get(GET_URL)
+    assert response.status_code == 200
+    assert response.json()
+
+    # Overwrite one session with another. This is illustrating the behavior
+    # one might see when loading a cookie from disk.
+    icr1.token = icr2.token
+
+    # Ensure we indeed overwrote the tokens
+    assert icr1.token == icr2.token
+
+    # Recheck to make sure that all web requests still work
+    response = icr1.get(GET_URL)
+    assert response.status_code == 200
+    assert response.json()
+    response = icr2.get(GET_URL)
+    assert response.status_code == 200
+    assert response.json()
+
+    # Create new object with no token data
+    icr3 = iControlRESTSession(opt_username, opt_password, token='tmos')
+    assert icr3.token is None
+
+    # Give token to new session
+    icr3.token = icr2.token
+
+    # Ensure new object can talk
+    response = icr1.get(GET_URL)
+    assert response.status_code == 200
+    assert response.json()
+
+    # Ensure new object did not get new token but used existing one
+    assert icr3.token == icr2.token
+
+    # Provide the token via object instantiation
+    icr4 = iControlRESTSession(
+        opt_username, opt_password, token='tmos',
+        token_to_use=icr2.token
+    )
+
+    # Ensure the token was actually given
+    assert icr4.token == icr2.token
+
+    # Ensure the provided token works
+    response = icr4.get(GET_URL)
+    assert response.status_code == 200
+    assert response.json()
