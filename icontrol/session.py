@@ -342,21 +342,31 @@ class iControlRESTSession(object):
         since no PKI exists for this purpose in general, hence the
         "disable_warnings" statement.
 
-        :param str username: The user to connect with.
-        :param str password: The password of the user.
-        :param int timeout: The timeout, in seconds, to wait before closing
-                            the session.
-        :param bool token: True or False, specifying whether to use token
-                           authentication or not.
-        :param str user_agent: A string to append to the user agent header
-                              that is sent during a session.
-        :param str verify: The path to a CA bundle containing the
-                              CA certificate for SSL validation
+        Attributes:
+            username (str): The user to connect with.
+            password (str): The password of the user.
+            timeout (int): The timeout, in seconds, to wait before closing
+                the session.
+            token (bool|str): True or False, specifying whether to use token
+                authentication or not.
+            token_to_use (str): String containing the token itself to use.
+                This is particularly usefule in situations where you want to
+                mimic the behavior of a browser insofar as storing the token
+                in a cookie and retrieving it for use "later". This is used
+                in situations such as automation tools to prevent token
+                abuse on the BIG-IP. There is a limit that users may not go
+                beyond when creating tokens and their re-use is an attempt
+                to mitigate this scenario.
+            user_agent (str): A string to append to the user agent header
+                that is sent during a session.
+            verify (str): The path to a CA bundle containing the CA
+                certificate for SSL validation
         """
         verify = kwargs.pop('verify', False)
         timeout = kwargs.pop('timeout', 30)
         token_auth = kwargs.pop('token', None)
         user_agent = kwargs.pop('user_agent', None)
+        token_to_use = kwargs.pop('token_to_use', None)
 
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
@@ -372,19 +382,22 @@ class iControlRESTSession(object):
 
         # Handle token-based auth.
         if token_auth is True:
-            self.session.auth = iControlRESTTokenAuth(username, password,
-                                                      verify=verify)
-        elif token_auth:  # Truthy but not true: non-default loginAuthProvider
-            self.session.auth = iControlRESTTokenAuth(username,
-                                                      password,
-                                                      token_auth,
-                                                      verify=verify)
+            self.session.auth = iControlRESTTokenAuth(
+                username, password, verify=verify
+            )
+        elif token_auth:
+            # Truthy but not true: non-default loginAuthProvider
+            self.session.auth = iControlRESTTokenAuth(
+                username, password, token_auth, verify=verify
+            )
         else:
             self.session.auth = (username, password)
 
         # Set state as indicated by ancestral code.
         self.session.verify = verify
         self.session.headers.update({'Content-Type': 'application/json'})
+        if token_to_use:
+            self.session.auth.token = token_to_use
 
         # Add a user agent for this library and any specified UA
         self.append_user_agent('f5-icontrol-rest-python/' + version)
@@ -523,3 +536,22 @@ class iControlRESTSession(object):
         old_ua = self.session.headers.get('User-Agent', '')
         ua = old_ua + ' ' + user_agent
         self.session.headers['User-Agent'] = ua.strip()
+
+    @property
+    def token(self):
+        """Convenience wrapper around returning the current token
+
+        Returns:
+             result (str): The current token being sent in session headers.
+        """
+        return self.session.auth.token
+
+    @token.setter
+    def token(self, value):
+        """Convenience wrapper around overwriting the current token
+
+        Useful in situations where you have an existing iControlRESTSession
+        object which you want to set a new token on. This token could have
+        been read from a stored value for example.
+        """
+        self.session.auth.token = value
