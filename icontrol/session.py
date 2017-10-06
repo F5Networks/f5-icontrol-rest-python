@@ -308,8 +308,12 @@ def _unique_resource_identifier_from_kwargs(**kwargs):
     """
     name = kwargs.pop('name', '')
     uuid = kwargs.pop('uuid', '')
+    id = kwargs.pop('id', '')
     if uuid:
         return uuid, kwargs
+    elif id:
+        # Used for /mgmt/cm/system/authn/providers/tmos on BIG-IP
+        return id, kwargs
     else:
         return name, kwargs
 
