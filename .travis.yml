@@ -5,12 +5,17 @@ env:
 services:
   - docker
 language: python
-python:
-  - '2.7'
-  - '2.6'
-  - '3.4'
-  - '3.5'
-  - nightly
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV=py27-unit
+    - python: 2.6
+      env: TOXENV=py26-unit
+    - python: 3.4
+      env: TOXENV=py34-unit
+    - python: 3.5
+      env: TOXENV=py35-unit
+    - env: TOXENV=flake=
 before_install:
   - git config --global user.email "OpenStack_TravisCI@f5.com"
   - git config --global user.name "Travis F5 Openstack"
@@ -18,12 +23,11 @@ install:
   - pip install -r requirements.test.txt
   - pip install -r requirements.docs.txt
 script:
-  - tox -e default-flake
-  - tox -e default-unit
-  - ${DIST_REPO}/scripts/package.sh "redhat" "7"
-  - ${DIST_REPO}/scripts/package.sh "ubuntu" "14.04"
-  - sudo chown -R travis:travis ${DIST_REPO}/rpms/build
-  - sudo chown  travis:travis ${DIST_REPO}/deb_dist/*.deb
+  - tox
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then ${DIST_REPO}/scripts/package.sh "redhat" "7"; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then ${DIST_REPO}/scripts/package.sh "ubuntu" "14.04"; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then sudo chown -R travis:travis ${DIST_REPO}/rpms/build; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then sudo chown  travis:travis ${DIST_REPO}/deb_dist/*.deb; fi
 before_deploy: PKG_VERSION=$(python -c "import icontrol; print(icontrol.__version__)")
 deploy:
   - provider: releases
