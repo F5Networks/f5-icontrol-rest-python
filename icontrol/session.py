@@ -57,7 +57,6 @@ against the BigIP REST Server, by pre- and post- processing the above methods.
 
 """
 
-from distutils.version import StrictVersion
 from icontrol import __version__ as version
 from icontrol.authtoken import iControlRESTTokenAuth
 from icontrol.exceptions import iControlUnexpectedHTTPError
@@ -350,7 +349,7 @@ class iControlRESTSession(object):
             token (bool|str): True or False, specifying whether to use token
                 authentication or not.
             token_to_use (str): String containing the token itself to use.
-                This is particularly usefule in situations where you want to
+                This is particularly useful in situations where you want to
                 mimic the behavior of a browser insofar as storing the token
                 in a cookie and retrieving it for use "later". This is used
                 in situations such as automation tools to prevent token
@@ -361,18 +360,25 @@ class iControlRESTSession(object):
                 that is sent during a session.
             verify (str): The path to a CA bundle containing the CA
                 certificate for SSL validation
+            auth_provider: String specifying the specific auth provider to
+                authenticate the username/password against. If this argument
+                is specified, the `token` argument is ignored. This keyword
+                implies that token based authentication is used. The strings
+                "none" and "default" are reserved words that imply no specific
+                auth provider is to be used; the system will default to one.
+                On BIG-IQ systems, the value 'local' can be used to refer to
+                local user authentication.
         """
         verify = kwargs.pop('verify', False)
         timeout = kwargs.pop('timeout', 30)
         token_auth = kwargs.pop('token', None)
         user_agent = kwargs.pop('user_agent', None)
         token_to_use = kwargs.pop('token_to_use', None)
+        auth_provider = kwargs.pop('auth_provider', None)
 
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
-        requests_version = requests.__version__
-        if StrictVersion(requests_version) < '2.9.1':
-            requests.packages.urllib3.disable_warnings()
+        requests.packages.urllib3.disable_warnings()
 
         # Compose with a Session obj
         self.session = requests.Session()
@@ -381,23 +387,30 @@ class iControlRESTSession(object):
         self.session.timeout = timeout
 
         # Handle token-based auth.
-        if token_auth is True:
-            self.session.auth = iControlRESTTokenAuth(
-                username, password, verify=verify
-            )
-        elif token_auth:
-            # Truthy but not true: non-default loginAuthProvider
-            self.session.auth = iControlRESTTokenAuth(
-                username, password, token_auth, verify=verify
-            )
+        if token_to_use:
+            self.session.auth = iControlRESTTokenAuth('admin', 'admin')
+            self.session.auth.token = token_to_use
         else:
-            self.session.auth = (username, password)
+            if auth_provider:
+                self.session.auth = iControlRESTTokenAuth(
+                    username, password, auth_provider=auth_provider, verify=verify
+                )
+            else:
+                if token_auth is True:
+                    self.session.auth = iControlRESTTokenAuth(
+                        username, password, verify=verify
+                    )
+                elif token_auth:
+                    # Truthy but not true: non-default loginAuthProvider
+                    self.session.auth = iControlRESTTokenAuth(
+                        username, password, token_auth, verify=verify
+                    )
+                else:
+                    self.session.auth = (username, password)
 
         # Set state as indicated by ancestral code.
         self.session.verify = verify
         self.session.headers.update({'Content-Type': 'application/json'})
-        if token_to_use:
-            self.session.auth.token = token_to_use
 
         # Add a user agent for this library and any specified UA
         self.append_user_agent('f5-icontrol-rest-python/' + version)
