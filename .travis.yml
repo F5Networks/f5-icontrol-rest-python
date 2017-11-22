@@ -15,7 +15,7 @@ matrix:
       env: TOXENV=py34-unit
     - python: 3.5
       env: TOXENV=py35-unit
-    - env: TOXENV=flake=
+    - env: TOXENV=flake
 before_install:
   - git config --global user.email "OpenStack_TravisCI@f5.com"
   - git config --global user.name "Travis F5 Openstack"
