@@ -30,12 +30,14 @@ a ``token=True`` argument when creating the
 >>> iCRS = iControlRESTSession('bob', 'secret', token=True)
 """
 
+import requests
+import time
+
 from icontrol.exceptions import iControlUnexpectedHTTPError
 from icontrol.exceptions import InvalidScheme
-import requests
 from requests.auth import AuthBase
 from requests.auth import HTTPBasicAuth
-import time
+
 try:
     # Python 3
     from urllib.parse import urlsplit
@@ -61,7 +63,7 @@ class iControlRESTTokenAuth(AuthBase):
     of ``login_provider_name``.
     """
     def __init__(self, username, password, login_provider_name='tmos',
-                 verify=False):
+                 verify=False, auth_provider=None):
         self.username = username
         self.password = password
         self.login_provider_name = login_provider_name
@@ -69,6 +71,7 @@ class iControlRESTTokenAuth(AuthBase):
         self.expiration = None
         self.attempts = 0
         self.verify = verify
+        self.auth_provider = auth_provider
         # We don't actually do auth at this point because we don't have a
         # hostname to authenticate to.
 
@@ -78,6 +81,31 @@ class iControlRESTTokenAuth(AuthBase):
         if self.expiration and time.time() > self.expiration:
             return False
         return True
+
+    def get_auth_providers(self, netloc):
+        """BIG-IQ specific query for auth providers
+
+        BIG-IP doesn't really need this because BIG-IP's multiple auth providers
+        seem to handle fallthrough just fine. BIG-IQ on the other hand, needs to
+        have its auth provider specified if you're using one of the non-default
+        ones.
+
+        :param netloc:
+        :return:
+        """
+        url = "https://%s/info/system?null" % (netloc)
+
+        response = requests.get(url, verify=self.verify)
+        if not response.ok or not hasattr(response, "json"):
+            error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
+                            (response.status_code,
+                             response.reason,
+                             response.url,
+                             response.text)
+            raise iControlUnexpectedHTTPError(error_message, response=response)
+        respJson = response.json()
+        result = respJson['providers']
+        return result
 
     def get_new_token(self, netloc):
         """Get a new token from BIG-IP and store it internally.
@@ -93,15 +121,34 @@ class iControlRESTTokenAuth(AuthBase):
         login_body = {
             'username': self.username,
             'password': self.password,
-            'loginProviderName': self.login_provider_name,
         }
+
+        if self.auth_provider:
+            if self.auth_provider == 'local':
+                login_body['loginProviderName'] = 'local'
+            elif self.auth_provider == 'tmos':
+                login_body['loginProviderName'] = 'tmos'
+            elif self.auth_provider not in ['none', 'default']:
+                providers = self.get_auth_providers(netloc)
+                for provider in providers:
+                    if self.auth_provider in provider['link']:
+                        login_body['loginProviderName'] = provider['name']
+                        break
+                    elif self.auth_provider == provider['name']:
+                        login_body['loginProviderName'] = provider['name']
+                        break
+        else:
+            if self.login_provider_name == 'tmos':
+                login_body['loginProviderName'] = self.login_provider_name
+
         login_url = "https://%s/mgmt/shared/authn/login" % (netloc)
 
-        response = requests.post(login_url,
-                                 json=login_body,
-                                 verify=self.verify,
-                                 auth=HTTPBasicAuth(self.username,
-                                                    self.password))
+        response = requests.post(
+            login_url,
+            json=login_body,
+            verify=self.verify,
+            auth=HTTPBasicAuth(self.username, self.password)
+        )
         self.attempts += 1
         if not response.ok or not hasattr(response, "json"):
             error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\

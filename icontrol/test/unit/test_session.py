@@ -495,27 +495,6 @@ def test_wrapped_put_success_with_data(iCRS, uparts):
                   data={'b': 2})
 
 
-def test___init__with_newer_requests_pkg():
-    with mock.patch('icontrol.session.requests') as mock_requests:
-        mock_requests.__version__ = '2.9.9'
-        session.iControlRESTSession('test_name', 'test_pw')
-        assert mock_requests.packages.urllib3.disable_warnings.called is False
-
-
-def test___init__with_older_requests_pkg():
-    with mock.patch('icontrol.session.requests') as mock_requests:
-        mock_requests.__version__ = '2.1.1'
-        session.iControlRESTSession('test_name', 'test_pw')
-        assert mock_requests.packages.urllib3.disable_warnings.called is True
-
-
-def test___init__with_2_9_1_requests_pkg():
-    with mock.patch('icontrol.session.requests') as mock_requests:
-        mock_requests.__version__ = '2.9.1'
-        session.iControlRESTSession('test_name', 'test_pw')
-        assert mock_requests.packages.urllib3.disable_warnings.called is False
-
-
 def test___init__user_agent():
     icrs = session.iControlRESTSession('admin', 'admin')
     assert UA in icrs.session.headers['User-Agent']

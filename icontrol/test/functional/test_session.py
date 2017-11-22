@@ -21,14 +21,42 @@ i.e https://192.168.1.1/mgmt/tm/boguscollection
 '''
 
 from distutils.version import LooseVersion
-from icontrol.session import iControlRESTSession
 from icontrol.authtoken import iControlRESTTokenAuth
-from requests.exceptions import HTTPError, SSLError
+from icontrol.session import iControlRESTSession
+from requests.exceptions import HTTPError
+from requests.exceptions import SSLError
 
-from pprint import pprint as pp
 import os
 import pytest
 import time
+
+
+@pytest.fixture
+def modules():
+    result = [
+        'am', 'afm', 'apm', 'asm', 'avr', 'fps', 'gtm', 'ilx',
+        'lc', 'ltm', 'pem', 'sam', 'swg', 'vcmp'
+    ]
+    return result
+
+
+@pytest.fixture(autouse=True)
+def skip_module_missing(request, modules, opt_bigip, opt_username, opt_password, opt_port):
+    if request.node.get_marker('skip_module_missing'):
+        marker = request.node.get_marker('skip_module_missing').args[0]
+        if marker in modules:
+            try:
+                from f5.bigip import ManagementRoot
+            except ImportError:
+                pytest.skip('Skipping test because I cannot determine if "{0}" is not provisioned'.format(marker))
+            mgmt = ManagementRoot(opt_bigip, opt_username, opt_password, port=opt_port, token=True)
+            provision = mgmt.tm.sys.provision
+            resource = getattr(provision, marker)
+            resource = resource.load()
+            result = resource.attrs
+            if str(result['level']) == 'none':
+                pytest.skip('Skipping test because "{0}" is not provisioned'.format(marker))
+
 
 nat_data = {
     'name': 'foo',
@@ -287,7 +315,6 @@ def test_delete(request, ICR, POST_URL):
             name=nat_data['name'],
             partition=nat_data['partition'],
             uri_as_parts=True)
-    pp(err.value.response.status_code)
     assert err.value.response.status_code == 404
 
 
@@ -429,11 +456,11 @@ def test_nonadmin_token_auth_invalid_username(opt_nonadmin_password,
 
 
 @pytest.mark.skipif(
-    LooseVersion(pytest.config.getoption('--release')) > LooseVersion(
-        '12.0.0'),
+    LooseVersion(pytest.config.getoption('--release')) > LooseVersion('12.0.0'),
     reason='Issue with spaces in the name parameter has been resolved post '
            '12.1.x, therefore another test needs running'
 )
+@pytest.mark.skip_module_missing('gtm')
 def test_get_special_name_11_x_12_0(request, ICR, BASE_URL):
     """Get the object with '/' characters in name
 
@@ -470,6 +497,7 @@ def test_get_special_name_11_x_12_0(request, ICR, BASE_URL):
     reason='Issue with paces in the name parameter has been resolved in '
            '12.1.x and up, any lower version will fail this test otherwise'
 )
+@pytest.mark.skip_module_missing('gtm')
 def test_get_special_name_12_1(request, ICR, BASE_URL):
     """Get the object with '/' characters in name
 
@@ -499,6 +527,11 @@ def test_get_special_name_12_1(request, ICR, BASE_URL):
     assert data['kind'] == 'tm:gtm:topology:topologystate'
 
 
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) < LooseVersion('12.1.0'),
+    reason='GTM must be provisioned for this test'
+)
+@pytest.mark.skip_module_missing('gtm')
 def test_delete_special_name(request, ICR, BASE_URL):
     """Test a DELETE request to a valid url.
 
@@ -555,14 +588,14 @@ def test_ssl_verify_fail(opt_username, opt_password, GET_URL):
     assert 'certificate verify failed' in str(excinfo.value)
 
 
-def test_get_token_ssl_verify_fail(opt_username, opt_password, opt_bigip):
+def test_get_token_ssl_verify_fail(opt_username, opt_password, opt_bigip, opt_port):
     """Test token retrival with an untrusted certificate"""
     dir_path = os.path.dirname(os.path.realpath(__file__))
     ca_bundle = '%s/dummy-ca-cert.pem' % dir_path
     icr = iControlRESTTokenAuth(opt_username, opt_password,
                                 verify=ca_bundle)
     with pytest.raises(SSLError) as excinfo:
-        icr.get_new_token(opt_bigip)
+        icr.get_new_token('{0}:{1}'.format(opt_bigip, opt_port))
     assert 'certificate verify failed' in str(excinfo.value)
 
 
@@ -626,5 +659,19 @@ def test_using_stashed_tokens(GET_URL, opt_bigip, opt_username, opt_password):
 
     # Ensure the provided token works
     response = icr4.get(GET_URL)
+    assert response.status_code == 200
+    assert response.json()
+
+
+def test_using_tmos_token(GET_URL, opt_bigip, opt_username, opt_password):
+    icr1 = iControlRESTSession(opt_username, opt_password, token='tmos')
+    response = icr1.get(GET_URL)
+    assert response.status_code == 200
+    assert response.json()
+
+
+def test_using_tmos_auth_provider(GET_URL, opt_bigip, opt_username, opt_password):
+    icr1 = iControlRESTSession(opt_username, opt_password, auth_provider='tmos')
+    response = icr1.get(GET_URL)
     assert response.status_code == 200
     assert response.json()
