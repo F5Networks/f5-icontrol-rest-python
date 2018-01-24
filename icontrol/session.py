@@ -66,10 +66,16 @@ from icontrol.exceptions import InvalidPrefixCollection
 from icontrol.exceptions import InvalidScheme
 from icontrol.exceptions import InvalidSuffixCollection
 from icontrol.exceptions import InvalidURIComponentPart
+from six import iteritems
 
 import functools
 import logging
 import requests
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 try:
     # Python 3
@@ -369,6 +375,10 @@ class iControlRESTSession(object):
                 On BIG-IQ systems, the value 'local' can be used to refer to
                 local user authentication.
         """
+
+        # Used for holding debug information
+        self._debug = []
+
         verify = kwargs.pop('verify', False)
         timeout = kwargs.pop('timeout', 30)
         token_auth = kwargs.pop('token', None)
@@ -437,7 +447,10 @@ class iControlRESTSession(object):
         :type partition: str
         :param \**kwargs: The :meth:`reqeusts.Session.delete` optional params
         """
-        return self.session.delete(uri, **kwargs)
+        req = requests.Request('DELETE', uri, **kwargs)
+        prepared = self.session.prepare_request(req)
+        self._debug.append(debug_prepared_request(prepared))
+        return self.session.send(prepared)
 
     @decorate_HTTP_verb_method
     def get(self, uri, **kwargs):
@@ -459,7 +472,10 @@ class iControlRESTSession(object):
         :type partition: str
         :param \**kwargs: The :meth:`reqeusts.Session.get` optional params
         """
-        return self.session.get(uri, **kwargs)
+        req = requests.Request('GET', uri, **kwargs)
+        prepared = self.session.prepare_request(req)
+        self._debug.append(debug_prepared_request(prepared))
+        return self.session.send(prepared)
 
     @decorate_HTTP_verb_method
     def patch(self, uri, data=None, **kwargs):
@@ -483,7 +499,10 @@ class iControlRESTSession(object):
         :type partition: str
         :param \**kwargs: The :meth:`reqeusts.Session.patch` optional params
         """
-        return self.session.patch(uri, data=data, **kwargs)
+        req = requests.Request('PATCH', uri, data=data, **kwargs)
+        prepared = self.session.prepare_request(req)
+        self._debug.append(debug_prepared_request(prepared))
+        return self.session.send(prepared)
 
     @decorate_HTTP_verb_method
     def post(self, uri, data=None, json=None, **kwargs):
@@ -509,7 +528,10 @@ class iControlRESTSession(object):
         :type partition: str
         :param \**kwargs: The :meth:`reqeusts.Session.post` optional params
         """
-        return self.session.post(uri, data=data, json=json, **kwargs)
+        req = requests.Request('POST', uri, data=data, json=json, **kwargs)
+        prepared = self.session.prepare_request(req)
+        self._debug.append(debug_prepared_request(prepared))
+        return self.session.send(prepared)
 
     @decorate_HTTP_verb_method
     def put(self, uri, data=None, **kwargs):
@@ -535,7 +557,10 @@ class iControlRESTSession(object):
         :type partition: str
         :param **kwargs: The :meth:`reqeusts.Session.put` optional params
         """
-        return self.session.put(uri, data=data, **kwargs)
+        req = requests.Request('PUT', uri, data=data, **kwargs)
+        prepared = self.session.prepare_request(req)
+        self._debug.append(debug_prepared_request(prepared))
+        return self.session.send(prepared)
 
     def append_user_agent(self, user_agent):
         """Append text to the User-Agent header for the request.
@@ -568,3 +593,14 @@ class iControlRESTSession(object):
         been read from a stored value for example.
         """
         self.session.auth.token = value
+
+
+def debug_prepared_request(request):
+    return
+    result = "curl -k -X {0} {1}".format(request.method.upper(), request.url)
+    for k, v in iteritems(request.headers):
+        result = result + " -H '{0}: {1}'".format(k, v)
+    if request.body:
+        kwargs = json.loads(request.body)
+        result = result + " -d '" + json.dumps(kwargs, sort_keys=True) + "'"
+    return result

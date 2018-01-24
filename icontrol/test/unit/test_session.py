@@ -14,6 +14,7 @@
 
 import mock
 import pytest
+import requests
 
 from icontrol import __version__ as VERSION
 from icontrol import session
@@ -27,11 +28,7 @@ def iCRS():
     fake_iCRS.session = mock.MagicMock()
     mock_response = mock.MagicMock()
     mock_response.status_code = 200
-    fake_iCRS.session.delete.return_value = mock_response
-    fake_iCRS.session.get.return_value = mock_response
-    fake_iCRS.session.patch.return_value = mock_response
-    fake_iCRS.session.post.return_value = mock_response
-    fake_iCRS.session.put.return_value = mock_response
+    fake_iCRS.session.send.return_value = mock_response
     return fake_iCRS
 
 
@@ -380,119 +377,109 @@ def test_correct_uri_construction_mgmt_cm(uparts_cm):
 
 # Test exception handling
 def test_wrapped_delete_success(iCRS, uparts):
-    iCRS.delete(uparts['base_uri'], partition='AFN', name='AIN',
-                uri_as_parts=True)
-    assert iCRS.session.delete.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN')
+    iCRS.delete(uparts['base_uri'], partition='AFN', name='AIN', uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
 
 
 def test_wrapped_delete_207_fail(iCRS, uparts):
-    iCRS.session.delete.return_value.status_code = 207
-    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
-        iCRS.delete(uparts['base_uri'], partition='A_FOLDER_NAME',
-                    name='AN_INSTANCE_NAME')
-    assert str(CHE.value).startswith('207 Unexpected Error: ')
+    iCRS.session.send.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as ex:
+        iCRS.delete(uparts['base_uri'], partition='A_FOLDER_NAME', name='AN_INSTANCE_NAME')
+    assert str(ex.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_get_success(iCRS, uparts):
-    iCRS.get(uparts['base_uri'], partition='AFN', name='AIN',
-             uri_as_parts=True)
-    assert iCRS.session.get.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN')
+    iCRS.get(uparts['base_uri'], partition='AFN', name='AIN', uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
 
 
 def test_wrapped_get_success_with_suffix(iCRS, uparts):
-    iCRS.get(uparts['base_uri'], partition='AFN', name='AIN',
-             suffix=uparts['suffix'],
-             uri_as_parts=True)
-    assert iCRS.session.get.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN/members/m1')
+    iCRS.get(uparts['base_uri'], partition='AFN', name='AIN', suffix=uparts['suffix'], uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN/members/m1'
 
 
 def test_wrapped_get_207_fail(iCRS, uparts):
-    iCRS.session.get.return_value.status_code = 207
-    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
-        iCRS.get(uparts['base_uri'], partition='A_FOLDER_NAME',
-                 name='AN_INSTANCE_NAME')
-    assert str(CHE.value).startswith('207 Unexpected Error: ')
+    iCRS.session.send.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as ex:
+        iCRS.get(uparts['base_uri'], partition='A_FOLDER_NAME', name='AN_INSTANCE_NAME')
+    assert str(ex.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_patch_success(iCRS, uparts):
-    iCRS.patch(uparts['base_uri'], partition='AFN', name='AIN',
-               uri_as_parts=True)
-    assert iCRS.session.patch.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN', data=None)
+    iCRS.patch(uparts['base_uri'], partition='AFN', name='AIN', uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
+    assert iCRS.session.prepare_request.call_args[0][0].data == []
 
 
 def test_wrapped_patch_207_fail(iCRS, uparts):
-    iCRS.session.patch.return_value.status_code = 207
-    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
-        iCRS.patch(uparts['base_uri'], partition='A_FOLDER_NAME',
-                   name='AN_INSTANCE_NAME')
-    assert str(CHE.value).startswith('207 Unexpected Error: ')
+    iCRS.session.send.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as ex:
+        iCRS.patch(uparts['base_uri'], partition='A_FOLDER_NAME', name='AN_INSTANCE_NAME')
+    assert str(ex.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_put_207_fail(iCRS, uparts):
-    iCRS.session.put.return_value.status_code = 207
-    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
-        iCRS.put(uparts['base_uri'], partition='A_FOLDER_NAME',
-                 name='AN_INSTANCE_NAME')
-    assert str(CHE.value).startswith('207 Unexpected Error: ')
+    iCRS.session.send.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as ex:
+        iCRS.put(uparts['base_uri'], partition='A_FOLDER_NAME', name='AN_INSTANCE_NAME')
+    assert str(ex.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_post_207_fail(iCRS, uparts):
-    iCRS.session.post.return_value.status_code = 207
-    with pytest.raises(session.iControlUnexpectedHTTPError) as CHE:
-        iCRS.post(uparts['base_uri'], partition='A_FOLDER_NAME',
-                  name='AN_INSTANCE_NAME')
-    assert str(CHE.value).startswith('207 Unexpected Error: ')
+    iCRS.session.send.return_value.status_code = 207
+    with pytest.raises(session.iControlUnexpectedHTTPError) as ex:
+        iCRS.post(uparts['base_uri'], partition='A_FOLDER_NAME', name='AN_INSTANCE_NAME')
+    assert str(ex.value).startswith('207 Unexpected Error: ')
 
 
 def test_wrapped_post_success(iCRS, uparts):
-    iCRS.post(uparts['base_uri'], partition='AFN', name='AIN',
-              uri_as_parts=True)
-    assert iCRS.session.post.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN', data=None,
-                  json=None)
+    iCRS.post(uparts['base_uri'], partition='AFN', name='AIN', uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
+    assert iCRS.session.prepare_request.call_args[0][0].data == []
+    assert iCRS.session.prepare_request.call_args[0][0].json is None
 
 
 def test_wrapped_post_success_with_data(iCRS, uparts):
-    iCRS.post(uparts['base_uri'], partition='AFN', name='AIN', data={'a': 1},
-              uri_as_parts=True)
-    assert iCRS.session.post.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
-                  data={'a': 1}, json=None)
+    iCRS.post(uparts['base_uri'], partition='AFN', name='AIN', data={'a': 1}, uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
+    assert iCRS.session.prepare_request.call_args[0][0].data == {'a': 1}
+    assert iCRS.session.prepare_request.call_args[0][0].json is None
 
 
 def test_wrapped_post_success_with_json(iCRS, uparts):
-    iCRS.post(uparts['base_uri'], partition='AFN', name='AIN', json='{"a": 1}',
-              uri_as_parts=True)
-    assert iCRS.session.post.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN', data=None,
-                  json='{"a": 1}')
+    iCRS.post(uparts['base_uri'], partition='AFN', name='AIN', json='{"a": 1}', uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
+    assert iCRS.session.prepare_request.call_args[0][0].data == []
+    assert iCRS.session.prepare_request.call_args[0][0].json == '{"a": 1}'
 
 
 def test_wrapped_post_success_with_json_and_data(iCRS, uparts):
-    iCRS.post(uparts['base_uri'], partition='AFN', name='AIN', data={'a': 1},
-              json='{"a": 1}', uri_as_parts=True)
-    assert iCRS.session.post.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
-                  data={'a': 1}, json='{"a": 1}')
+    iCRS.post(uparts['base_uri'], partition='AFN', name='AIN', data={'a': 1}, json='{"a": 1}', uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
+    assert iCRS.session.prepare_request.call_args[0][0].data == {'a': 1}
+    assert iCRS.session.prepare_request.call_args[0][0].json == '{"a": 1}'
 
 
 def test_wrapped_put_success(iCRS, uparts):
-    iCRS.put(uparts['base_uri'], partition='AFN', name='AIN',
-             uri_as_parts=True)
-    assert iCRS.session.put.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN', data=None)
+    iCRS.put(uparts['base_uri'], partition='AFN', name='AIN', uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
+    assert iCRS.session.prepare_request.call_args[0][0].data == []
 
 
 def test_wrapped_put_success_with_data(iCRS, uparts):
-    iCRS.put(uparts['base_uri'], partition='AFN', name='AIN', data={'b': 2},
-             uri_as_parts=True)
-    assert iCRS.session.put.call_args ==\
-        mock.call('https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN',
-                  data={'b': 2})
+    iCRS.put(uparts['base_uri'], partition='AFN', name='AIN', data={'b': 2}, uri_as_parts=True)
+    assert isinstance(iCRS.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
+    assert iCRS.session.prepare_request.call_args[0][0].data == {'b': 2}
 
 
 def test___init__user_agent():
@@ -531,7 +518,8 @@ def test__init__without_verify():
 
 
 def test__init__with_verify():
-    icrs = session.iControlRESTSession('test_name', 'test_pw',
-                                       token=True, verify='/path/to/cert')
+    icrs = session.iControlRESTSession(
+        'test_name', 'test_pw', token=True, verify='/path/to/cert'
+    )
     assert icrs.session.verify is '/path/to/cert'
     assert icrs.session.auth.verify is '/path/to/cert'
