@@ -41,6 +41,7 @@ deploy:
     on:
       repo: F5Networks/f5-icontrol-rest-python
       tags: true
+      python: 2.7
   - provider: pypi
     user: $PYPI_USER
     password: $PYPI_PASSWORD
