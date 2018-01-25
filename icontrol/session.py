@@ -596,7 +596,6 @@ class iControlRESTSession(object):
 
 
 def debug_prepared_request(request):
-    return
     result = "curl -k -X {0} {1}".format(request.method.upper(), request.url)
     for k, v in iteritems(request.headers):
         result = result + " -H '{0}: {1}'".format(k, v)

@@ -26,6 +26,10 @@ UA = 'f5-icontrol-rest-python/%s' % VERSION
 def iCRS():
     fake_iCRS = session.iControlRESTSession('admin', 'admin')
     fake_iCRS.session = mock.MagicMock()
+    req = requests.PreparedRequest()
+    req.prepare(method='post', url='https://0.0.0.0/mgmt/tm/root/RESTiface/')
+    req.body = '{"foo": "bar"}'
+    fake_iCRS.session.prepare_request.return_value = req
     mock_response = mock.MagicMock()
     mock_response.status_code = 200
     fake_iCRS.session.send.return_value = mock_response
