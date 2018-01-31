@@ -447,10 +447,12 @@ class iControlRESTSession(object):
         :type partition: str
         :param \**kwargs: The :meth:`reqeusts.Session.delete` optional params
         """
-        req = requests.Request('DELETE', uri, **kwargs)
+        args1 = get_request_args(kwargs)
+        args2 = get_send_args(kwargs)
+        req = requests.Request('DELETE', uri, **args1)
         prepared = self.session.prepare_request(req)
         self._debug.append(debug_prepared_request(prepared))
-        return self.session.send(prepared)
+        return self.session.send(prepared, **args2)
 
     @decorate_HTTP_verb_method
     def get(self, uri, **kwargs):
@@ -472,10 +474,12 @@ class iControlRESTSession(object):
         :type partition: str
         :param \**kwargs: The :meth:`reqeusts.Session.get` optional params
         """
-        req = requests.Request('GET', uri, **kwargs)
+        args1 = get_request_args(kwargs)
+        args2 = get_send_args(kwargs)
+        req = requests.Request('GET', uri, **args1)
         prepared = self.session.prepare_request(req)
         self._debug.append(debug_prepared_request(prepared))
-        return self.session.send(prepared)
+        return self.session.send(prepared, **args2)
 
     @decorate_HTTP_verb_method
     def patch(self, uri, data=None, **kwargs):
@@ -499,10 +503,12 @@ class iControlRESTSession(object):
         :type partition: str
         :param \**kwargs: The :meth:`reqeusts.Session.patch` optional params
         """
-        req = requests.Request('PATCH', uri, data=data, **kwargs)
+        args1 = get_request_args(kwargs)
+        args2 = get_send_args(kwargs)
+        req = requests.Request('PATCH', uri, data=data, **args1)
         prepared = self.session.prepare_request(req)
         self._debug.append(debug_prepared_request(prepared))
-        return self.session.send(prepared)
+        return self.session.send(prepared, **args2)
 
     @decorate_HTTP_verb_method
     def post(self, uri, data=None, json=None, **kwargs):
@@ -528,10 +534,12 @@ class iControlRESTSession(object):
         :type partition: str
         :param \**kwargs: The :meth:`reqeusts.Session.post` optional params
         """
-        req = requests.Request('POST', uri, data=data, json=json, **kwargs)
+        args1 = get_request_args(kwargs)
+        args2 = get_send_args(kwargs)
+        req = requests.Request('POST', uri, data=data, json=json, **args1)
         prepared = self.session.prepare_request(req)
         self._debug.append(debug_prepared_request(prepared))
-        return self.session.send(prepared)
+        return self.session.send(prepared, **args2)
 
     @decorate_HTTP_verb_method
     def put(self, uri, data=None, **kwargs):
@@ -557,10 +565,12 @@ class iControlRESTSession(object):
         :type partition: str
         :param **kwargs: The :meth:`reqeusts.Session.put` optional params
         """
-        req = requests.Request('PUT', uri, data=data, **kwargs)
+        args1 = get_request_args(kwargs)
+        args2 = get_send_args(kwargs)
+        req = requests.Request('PUT', uri, data=data, **args1)
         prepared = self.session.prepare_request(req)
         self._debug.append(debug_prepared_request(prepared))
-        return self.session.send(prepared)
+        return self.session.send(prepared, **args2)
 
     def append_user_agent(self, user_agent):
         """Append text to the User-Agent header for the request.
@@ -599,7 +609,24 @@ def debug_prepared_request(request):
     result = "curl -k -X {0} {1}".format(request.method.upper(), request.url)
     for k, v in iteritems(request.headers):
         result = result + " -H '{0}: {1}'".format(k, v)
-    if request.body:
-        kwargs = json.loads(request.body)
-        result = result + " -d '" + json.dumps(kwargs, sort_keys=True) + "'"
+    if any(v == 'application/json' for k, v in iteritems(request.headers)):
+        if request.body:
+            kwargs = json.loads(request.body)
+            result = result + " -d '" + json.dumps(kwargs, sort_keys=True) + "'"
+    return result
+
+
+def get_send_args(kwargs):
+    result = []
+    for arg in ['stream', 'timeout', 'verify', 'cert', 'proxies']:
+        result.append((arg, kwargs.pop(arg, None)))
+    result = dict([(k, v) for k, v in result if v is not None])
+    return result
+
+
+def get_request_args(kwargs):
+    result = []
+    for arg in ['headers', 'files', 'data', 'json', 'params', 'auth', 'cookies', 'hooks']:
+        result.append((arg, kwargs.pop(arg, None)))
+    result = dict([(k, v) for k, v in result if v is not None])
     return result
