@@ -28,7 +28,7 @@ setup(name='f5-icontrol-rest',
       author_email='f5-icontrol-rest-python@f5.com',
       url='https://github.com/F5Networks/f5-icontrol-rest-python',
       keywords=['F5', 'icontrol', 'rest', 'api', 'bigip'],
-      install_requires=['requests >= 2.5.0, < 3'],
+      install_requires=['requests >= 2.5.0, < 3', 'urllib3'],
       py_modules=[
           'icontrol.session',
       ],

@@ -37,6 +37,20 @@ def iCRS():
 
 
 @pytest.fixture()
+def iCRSBytes():
+    fake_iCRS = session.iControlRESTSession('admin', 'admin')
+    fake_iCRS.session = mock.MagicMock()
+    req = requests.PreparedRequest()
+    req.prepare(method='post', url='https://0.0.0.0/mgmt/tm/root/RESTiface/')
+    req.body = b'{"foo": "bar"}'
+    fake_iCRS.session.prepare_request.return_value = req
+    mock_response = mock.MagicMock()
+    mock_response.status_code = 200
+    fake_iCRS.session.send.return_value = mock_response
+    return fake_iCRS
+
+
+@pytest.fixture()
 def uparts():
     parts_dict = {'base_uri': 'https://0.0.0.0/mgmt/tm/root/RESTiface/',
                   'partition': 'BIGCUSTOMER',
@@ -470,6 +484,14 @@ def test_wrapped_post_success_with_json_and_data(iCRS, uparts):
     assert iCRS.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
     assert iCRS.session.prepare_request.call_args[0][0].data == {'a': 1}
     assert iCRS.session.prepare_request.call_args[0][0].json == '{"a": 1}'
+
+
+def test_wrapped_post_success_with_json_and_data_bytestring(iCRSBytes, uparts):
+    iCRSBytes.post(uparts['base_uri'], partition='AFN', name='AIN', data={'a': 1}, json='{"a": 1}', uri_as_parts=True)
+    assert isinstance(iCRSBytes.session.prepare_request.call_args[0][0], requests.Request)
+    assert iCRSBytes.session.prepare_request.call_args[0][0].url == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~AFN~AIN'
+    assert iCRSBytes.session.prepare_request.call_args[0][0].data == {'a': 1}
+    assert iCRSBytes.session.prepare_request.call_args[0][0].json == '{"a": 1}'
 
 
 def test_wrapped_put_success(iCRS, uparts):

@@ -71,6 +71,8 @@ from six import iteritems
 import functools
 import logging
 import requests
+import urllib3
+
 
 try:
     import json
@@ -388,7 +390,14 @@ class iControlRESTSession(object):
 
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
-        requests.packages.urllib3.disable_warnings()
+
+        try:
+            requests.packages.urllib3.disable_warnings()
+        except AttributeError:
+            try:
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            except Exception:
+                pass
 
         # Compose with a Session obj
         self.session = requests.Session()
@@ -611,7 +620,7 @@ def debug_prepared_request(request):
         result = result + " -H '{0}: {1}'".format(k, v)
     if any(v == 'application/json' for k, v in iteritems(request.headers)):
         if request.body:
-            kwargs = json.loads(request.body)
+            kwargs = json.loads(request.body.decode('utf-8'))
             result = result + " -d '" + json.dumps(kwargs, sort_keys=True) + "'"
     return result
 
