@@ -679,8 +679,9 @@ def test_using_tmos_auth_provider(GET_URL, opt_bigip, opt_username, opt_password
 
 def test_debug_tracing(request, POST_URL, GET_URL, opt_bigip, opt_username, opt_password):
     icr1 = iControlRESTSession(opt_username, opt_password, auth_provider='tmos')
+    icr1.debug = True
     icr1.get(GET_URL)
     response = icr1.post(POST_URL, json=nat_data)
     response.json()
     teardown_nat(request, icr1, POST_URL, nat_data['name'], nat_data['partition'])
-    assert len(icr1._debug) > 0
+    assert len(icr1.debug_output) > 0
