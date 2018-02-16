@@ -87,6 +87,11 @@ except ImportError:
     from urlparse import urlsplit
 
 
+BOOLEANS_TRUE = frozenset(('y', 'yes', 'on', '1', 'true', 't', 1, 1.0, True))
+BOOLEANS_FALSE = frozenset(('n', 'no', 'off', '0', 'false', 'f', 0, 0.0, False))
+BOOLEANS = BOOLEANS_TRUE.union(BOOLEANS_FALSE)
+
+
 def _validate_icruri(base_uri):
     # The icr_uri should specify https, the server name/address, and the path
     # to the REST-or-tm management interface "/mgmt/tm/"
@@ -379,7 +384,8 @@ class iControlRESTSession(object):
         """
 
         # Used for holding debug information
-        self._debug = []
+        self._debug_output = []
+        self._debug = False
 
         verify = kwargs.pop('verify', False)
         timeout = kwargs.pop('timeout', 30)
@@ -436,6 +442,19 @@ class iControlRESTSession(object):
         if user_agent:
             self.append_user_agent(user_agent)
 
+    @property
+    def debug(self):
+        return self._debug
+
+    @debug.setter
+    def debug(self, value):
+        if value in BOOLEANS:
+            self._debug = value
+
+    @property
+    def debug_output(self):
+        return self._debug_output
+
     @decorate_HTTP_verb_method
     def delete(self, uri, **kwargs):
         """Sends a HTTP DELETE command to the BIGIP REST Server.
@@ -460,7 +479,8 @@ class iControlRESTSession(object):
         args2 = get_send_args(kwargs)
         req = requests.Request('DELETE', uri, **args1)
         prepared = self.session.prepare_request(req)
-        self._debug.append(debug_prepared_request(prepared))
+        if self.debug:
+            self._debug_output.append(debug_prepared_request(prepared))
         return self.session.send(prepared, **args2)
 
     @decorate_HTTP_verb_method
@@ -487,7 +507,8 @@ class iControlRESTSession(object):
         args2 = get_send_args(kwargs)
         req = requests.Request('GET', uri, **args1)
         prepared = self.session.prepare_request(req)
-        self._debug.append(debug_prepared_request(prepared))
+        if self.debug:
+            self._debug_output.append(debug_prepared_request(prepared))
         return self.session.send(prepared, **args2)
 
     @decorate_HTTP_verb_method
@@ -516,7 +537,8 @@ class iControlRESTSession(object):
         args2 = get_send_args(kwargs)
         req = requests.Request('PATCH', uri, data=data, **args1)
         prepared = self.session.prepare_request(req)
-        self._debug.append(debug_prepared_request(prepared))
+        if self.debug:
+            self._debug_output.append(debug_prepared_request(prepared))
         return self.session.send(prepared, **args2)
 
     @decorate_HTTP_verb_method
@@ -547,7 +569,8 @@ class iControlRESTSession(object):
         args2 = get_send_args(kwargs)
         req = requests.Request('POST', uri, data=data, json=json, **args1)
         prepared = self.session.prepare_request(req)
-        self._debug.append(debug_prepared_request(prepared))
+        if self.debug:
+            self._debug_output.append(debug_prepared_request(prepared))
         return self.session.send(prepared, **args2)
 
     @decorate_HTTP_verb_method
@@ -578,7 +601,8 @@ class iControlRESTSession(object):
         args2 = get_send_args(kwargs)
         req = requests.Request('PUT', uri, data=data, **args1)
         prepared = self.session.prepare_request(req)
-        self._debug.append(debug_prepared_request(prepared))
+        if self.debug:
+            self._debug.append(debug_prepared_request(prepared))
         return self.session.send(prepared, **args2)
 
     def append_user_agent(self, user_agent):
