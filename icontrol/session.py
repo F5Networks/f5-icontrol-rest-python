@@ -602,7 +602,7 @@ class iControlRESTSession(object):
         req = requests.Request('PUT', uri, data=data, **args1)
         prepared = self.session.prepare_request(req)
         if self.debug:
-            self._debug.append(debug_prepared_request(prepared))
+            self._debug_output.append(debug_prepared_request(prepared))
         return self.session.send(prepared, **args2)
 
     def append_user_agent(self, user_agent):
