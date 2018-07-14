@@ -42,5 +42,9 @@ htmlcov/*
 # Translations
 *.mo
 
+# Emacs files
+*~
+*\#*
+
 # Locally built RPMS
 rpms
