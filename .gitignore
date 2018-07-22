@@ -41,3 +41,13 @@ htmlcov/*
 
 # Translations
 *.mo
+
+# Emacs files
+*~
+*\#*
+
+# Vim files
+*.swp
+
+# Locally built RPMS
+rpms
