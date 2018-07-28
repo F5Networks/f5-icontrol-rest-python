@@ -107,7 +107,7 @@ def _validate_icruri(base_uri):
         sub_path = path[9:]
     elif path.startswith('/mgmt/ap/'):
         # This can also be in BIG-IQ
-        sub_path = path[9:] 
+        sub_path = path[9:]
     elif path.startswith('/mgmt/shared/'):
         # This can be iWorkflow or BIG-IQ
         sub_path = path[13:]
