@@ -181,7 +181,8 @@ def _validate_uri_parts(
     _validate_name_partition_subpath(partition)
     if not kwargs.get('transform_name', False):
         _validate_name_partition_subpath(name)
-    _validate_name_partition_subpath(sub_path)
+    if not kwargs.get('transform_subpath', False):
+        _validate_name_partition_subpath(sub_path)
     if suffix_collections:
         _validate_suffix_collections(suffix_collections)
     return True
@@ -207,8 +208,8 @@ def generate_bigip_uri(base_uri, partition, name, sub_path, suffix, **kwargs):
     'https://0.0.0.0/mgmt/tm/ltm/nat/thwocky'
 
     ::Warning: There are cases where '/' and '~' characters are valid in the
-        object name. This is indicated by passing 'transform_name' boolean as
-        True, by default this is set to False.
+        object name or subPath. This is indicated by passing the 'transform_name' or 'transform_subpath' boolean
+        respectively as True. By default this is set to False.
     '''
 
     _validate_uri_parts(base_uri, partition, name, sub_path, suffix,
@@ -217,6 +218,9 @@ def generate_bigip_uri(base_uri, partition, name, sub_path, suffix, **kwargs):
     if kwargs.get('transform_name', False):
         if name != '':
             name = name.replace('/', '~')
+    if kwargs.get('transform_subpath', False):
+        if sub_path != '':
+            sub_path = sub_path.replace('/', '~')
     if partition != '':
         partition = '~' + partition
     else:
@@ -260,10 +264,12 @@ def decorate_HTTP_verb_method(method):
         identifier, kwargs = _unique_resource_identifier_from_kwargs(**kwargs)
         uri_as_parts = kwargs.pop('uri_as_parts', False)
         transform_name = kwargs.pop('transform_name', False)
+        transform_subpath = kwargs.pop('transform_subpath', False)
         if uri_as_parts:
             REST_uri = generate_bigip_uri(RIC_base_uri, partition, identifier,
                                           sub_path, suffix,
                                           transform_name=transform_name,
+                                          transform_subpath=transform_subpath,
                                           **kwargs)
         else:
             REST_uri = RIC_base_uri
