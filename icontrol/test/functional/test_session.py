@@ -1,4 +1,4 @@
-# Copyright 2015-2016 F5 Networks Inc.
+# Copyright 2019 F5 Networks Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -93,6 +93,36 @@ iapp_serv_data = {
 }
 
 
+iapp_templ_data_subpath_v11 = {
+    "name": "test_templ_subpath",
+    "partition": "Common",
+    "actions": {
+        "definition":
+        {
+            "implementation": '''tmsh::create { net vlan v102 }
+                tmsh::create { net self self.v102 address 192.168.1.5/24 vlan v102 }
+                tmsh::create { gtm datacenter dc1 }
+                tmsh::create { auth partition part1 }
+                tmsh::cd { /part1 }
+                tmsh::create { ltm virtual v1 destination 192.168.1.100:80 }
+                tmsh::cd { /Common }
+                tmsh::create { gtm server ltm11 addresses add { 192.168.1.5 } datacenter dc1
+                virtual-servers replace-all-with { /part1/v1 { destination 192.168.1.100:80 } } }
+                tmsh::cd { /part1 }
+                tmsh::create { gtm pool p1 members replace-all-with { /Common/ltm11:/part1/v1 } }''',
+            "presentation": ""
+        }
+    }
+}
+
+
+iapp_serv_data_subpath = {
+    "name": "test_serv_subpath",
+    "partition": "Common",
+    "template": "/Common/test_templ_subpath"
+}
+
+
 @pytest.fixture
 def setup_subpath(request, ICR, BASE_URL):
     app_templ_url = BASE_URL + 'sys/application/template/'
@@ -118,6 +148,40 @@ def setup_subpath(request, ICR, BASE_URL):
     ICR.post(app_templ_url, json=iapp_templ_data)
     try:
         ICR.post(app_serv_url, json=iapp_serv_data)
+    except HTTPError as ex:
+        # The creation of an iapp service does cause a 404 error in bigip
+        # versions up to but excluding 12.0
+        if ex.response.status_code == 404:
+            pass
+    request.addfinalizer(teardown_iapp)
+    return app_serv_url
+
+
+@pytest.fixture
+def setup_subpath_alt(request, ICR, BASE_URL):
+    app_templ_url = BASE_URL + 'sys/application/template/'
+    app_serv_url = BASE_URL + 'sys/application/service/'
+
+    def teardown_iapp():
+        try:
+            ICR.delete(
+                app_serv_url, uri_as_parts=True,
+                name='test_serv_subpath', partition='Common',
+                subPath='test_serv_subpath.app')
+        except Exception:
+            pass
+
+        try:
+            ICR.delete(
+                app_templ_url, uri_as_parts=True,
+                name='test_templ_subpath', partition='Common')
+        except Exception:
+            pass
+
+    teardown_iapp()
+    ICR.post(app_templ_url, json=iapp_templ_data_subpath_v11)
+    try:
+        ICR.post(app_serv_url, json=iapp_serv_data_subpath)
     except HTTPError as ex:
         # The creation of an iapp service does cause a 404 error in bigip
         # versions up to but excluding 12.0
@@ -165,7 +229,7 @@ def invalid_token_credentials(user, password, url):
     with pytest.raises(HTTPError) as err:
         icr.get(url)
     return (err.value.response.status_code == 401 and
-            'Authentication required!' in err.value.message)
+            'Authentication required!' in str(err.value))
 
 
 def test_get_with_subpath(setup_subpath, ICR, BASE_URL):
@@ -183,6 +247,25 @@ def test_get_with_subpath(setup_subpath, ICR, BASE_URL):
     data = pool_res.json()
     assert data['items'][0]['subPath'] == 'test_serv.app'
     assert data['items'][0]['name'] == 'test_pool'
+
+
+@pytest.mark.skipif(
+    LooseVersion(pytest.config.getoption('--release')) >= LooseVersion(
+        '12.0.0'),
+    reason='No GTM Pool type, introduced in 12.0+'
+)
+def test_get_with_subpath_transform(setup_subpath_alt, ICR, BASE_URL):
+    app_serv_url = setup_subpath_alt
+    res = ICR.get(
+        app_serv_url, name='test_serv_subpath',
+        partition='Common', subPath='test_serv_subpath.app')
+    assert res.status_code == 200
+    pool_uri = BASE_URL + 'gtm/pool/~part1~p1/members/'
+    poolmem_res = ICR.get(pool_uri, name='v1', partition='Common', subPath='ltm11:/part1')
+    assert poolmem_res.status_code == 200
+    data = poolmem_res.json()
+    assert data['items'][0]['name'] == 'v1'
+    assert data['items'][0]['subPath'] == 'ltm11:/part1'
 
 
 def test_get(ICR, GET_URL):
