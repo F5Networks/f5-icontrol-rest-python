@@ -4,14 +4,14 @@
 # Test Requirements
 flake8==2.6.2
 pep8==1.7.0
-pyflakes==1.3.0
+pyflakes==1.2.3
 mccabe==0.5.2
 mock==1.3.0
 pytest==2.9.1
 pytest-cov==2.2.1
 git+https://github.com/F5Networks/pytest-symbols.git
 python-coveralls==2.7.0
-pyOpenSSL==16.2.0
+pyOpenSSL>=17.5.0
 requests-mock==1.1.0
 tox
 six
