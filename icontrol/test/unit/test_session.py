@@ -1,4 +1,4 @@
-# Copyright 2015-2016 F5 Networks Inc.
+# Copyright 2019 F5 Networks Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,7 +57,8 @@ def uparts():
                   'name': 'foobar1',
                   'sub_path': '',
                   'suffix': '/members/m1',
-                  'transform_name': False}
+                  'transform_name': False,
+                  'transform_subpath': False}
     return parts_dict
 
 
@@ -68,7 +69,8 @@ def transform_name():
                   'name': 'foobar1: 1.1.1.1/24 bar1: /Common/DC1',
                   'sub_path': '',
                   'suffix': '/members/m1',
-                  'transform_name': True}
+                  'transform_name': True,
+                  'transform_subpath': False}
     return parts_dict
 
 
@@ -79,7 +81,8 @@ def uparts_with_subpath():
                   'name': 'foobar1',
                   'sub_path': 'sp',
                   'suffix': '/members/m1',
-                  'transform_name': False}
+                  'transform_name': False,
+                  'transform_subpath': False}
     return parts_dict
 
 
@@ -88,9 +91,10 @@ def transform_name_w_subpath():
     parts_dict = {'base_uri': 'https://0.0.0.0/mgmt/tm/root/RESTiface/',
                   'partition': 'BIGCUSTOMER',
                   'name': 'foobar1: 1.1.1.1/24 bar1: /Common/DC1',
-                  'sub_path': 'sp',
+                  'sub_path': 'ltm:/sp',
                   'suffix': '/members/m1',
-                  'transform_name': True}
+                  'transform_name': True,
+                  'transform_subpath': True}
     return parts_dict
 
 
@@ -306,7 +310,7 @@ def test_correct_uri_transformed_nameless_subpath(transform_name_w_subpath):
     transform_name_w_subpath['name'] = ''
     uri = session.generate_bigip_uri(**transform_name_w_subpath)
     assert uri ==\
-        "https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER~sp/members/m1"
+        "https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER~ltm:~sp/members/m1"
 
 
 def test_correct_uri_transformed_partitionless_and_nameless(transform_name):
@@ -376,7 +380,7 @@ def test_correct_uri_transformed_nameless_and_suffixless_subpath(
     transform_name_w_subpath['name'] = ''
     transform_name_w_subpath['suffix'] = ''
     uri = session.generate_bigip_uri(**transform_name_w_subpath)
-    assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER~sp'
+    assert uri == 'https://0.0.0.0/mgmt/tm/root/RESTiface/~BIGCUSTOMER~ltm:~sp'
 
 
 def test_correct_uri_construction_mgmt_shared(uparts_shared):
