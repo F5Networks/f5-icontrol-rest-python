@@ -275,7 +275,9 @@ def decorate_HTTP_verb_method(method):
             REST_uri = RIC_base_uri
         pre_message = "%s WITH uri: %s AND suffix: %s AND kwargs: %s" %\
             (method.__name__, REST_uri, suffix, kwargs)
-        logging.debug(pre_message)
+
+        logger = logging.getLogger(__name__)
+        logger.debug(pre_message)
         response = method(self, REST_uri, **kwargs)
         post_message =\
             "RESPONSE::STATUS: %s Content-Type: %s Content-Encoding:"\
@@ -283,7 +285,7 @@ def decorate_HTTP_verb_method(method):
                                response.headers.get('Content-Type', None),
                                response.headers.get('Content-Encoding', None),
                                response.text)
-        logging.debug(post_message)
+        logger.debug(post_message)
         if response.status_code not in range(200, 207):
             error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
                             (response.status_code,
