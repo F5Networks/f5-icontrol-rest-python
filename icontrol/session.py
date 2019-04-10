@@ -400,6 +400,7 @@ class iControlRESTSession(object):
 
         verify = kwargs.pop('verify', False)
         timeout = kwargs.pop('timeout', 30)
+        proxies = kwargs.pop('proxies', {})
         token_auth = kwargs.pop('token', None)
         user_agent = kwargs.pop('user_agent', None)
         token_to_use = kwargs.pop('token_to_use', None)
@@ -421,6 +422,9 @@ class iControlRESTSession(object):
 
         # Configure with passed parameters
         self.session.timeout = timeout
+
+        # Configure with proxy parameters
+        self.session.proxies = proxies
 
         # Handle token-based auth.
         if token_to_use:
