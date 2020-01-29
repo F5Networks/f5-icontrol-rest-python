@@ -55,6 +55,8 @@ class iControlRESTTokenAuth(AuthBase):
     BigIP should consult when creating the token.
     :param str verify: The path to a CA bundle containing the \
     CA certificate for SSL validation
+    :param proxies: A dict of proxy information for Requests to utilize \
+    on this connection to the BigIP
 
     If ``username`` is configured locally on the BigIP,
     ``login_provider_name`` should be ``"tmos"`` (default).  Otherwise
@@ -63,10 +65,11 @@ class iControlRESTTokenAuth(AuthBase):
     of ``login_provider_name``.
     """
     def __init__(self, username, password, login_provider_name='tmos',
-                 verify=False, auth_provider=None):
+                 verify=False, auth_provider=None, proxies=None):
         self.username = username
         self.password = password
         self.login_provider_name = login_provider_name
+        self.proxies = proxies
         self.token = None
         self.expiration = None
         self.attempts = 0
@@ -95,7 +98,7 @@ class iControlRESTTokenAuth(AuthBase):
         """
         url = "https://%s/info/system?null" % (netloc)
 
-        response = requests.get(url, verify=self.verify)
+        response = requests.get(url, verify=self.verify, proxies=self.proxies)
         if not response.ok or not hasattr(response, "json"):
             error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
                             (response.status_code,
@@ -147,7 +150,8 @@ class iControlRESTTokenAuth(AuthBase):
             login_url,
             json=login_body,
             verify=self.verify,
-            auth=HTTPBasicAuth(self.username, self.password)
+            auth=HTTPBasicAuth(self.username, self.password),
+            proxies=self.proxies,
         )
         self.attempts += 1
         if not response.ok or not hasattr(response, "json"):

@@ -428,22 +428,22 @@ class iControlRESTSession(object):
 
         # Handle token-based auth.
         if token_to_use:
-            self.session.auth = iControlRESTTokenAuth('admin', 'admin')
+            self.session.auth = iControlRESTTokenAuth('admin', 'admin', proxies=proxies)
             self.session.auth.token = token_to_use
         else:
             if auth_provider:
                 self.session.auth = iControlRESTTokenAuth(
-                    username, password, auth_provider=auth_provider, verify=verify
+                    username, password, auth_provider=auth_provider, verify=verify, proxies=proxies
                 )
             else:
                 if token_auth is True:
                     self.session.auth = iControlRESTTokenAuth(
-                        username, password, verify=verify
+                        username, password, verify=verify, proxies=proxies
                     )
                 elif token_auth:
                     # Truthy but not true: non-default loginAuthProvider
                     self.session.auth = iControlRESTTokenAuth(
-                        username, password, token_auth, verify=verify
+                        username, password, token_auth, verify=verify, proxies=proxies
                     )
                 else:
                     self.session.auth = (username, password)
