@@ -6,6 +6,10 @@
 .idea/*
 *.py[cod]
 
+### Additional virtual environment files
+bin/
+pyvenv.cfg
+
 ### added with RM's Makefile
 localutils/**
 agent/f5/bigip/pycontrol/wsdl/**
