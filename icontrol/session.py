@@ -258,6 +258,7 @@ def decorate_HTTP_verb_method(method):
     """
     @functools.wraps(method)
     def wrapper(self, RIC_base_uri, **kwargs):
+        status_override = kwargs.pop('status_override', False)
         partition = kwargs.pop('partition', '')
         sub_path = kwargs.pop('subPath', '')
         suffix = kwargs.pop('suffix', '')
@@ -286,7 +287,7 @@ def decorate_HTTP_verb_method(method):
                                response.headers.get('Content-Encoding', None),
                                response.text)
         logger.debug(post_message)
-        if response.status_code not in range(200, 207):
+        if not status_override and response.status_code not in range(200, 207):
             error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
                             (response.status_code,
                              response.reason,
