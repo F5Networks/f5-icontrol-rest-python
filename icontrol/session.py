@@ -473,7 +473,7 @@ class iControlRESTSession(object):
 
     @decorate_HTTP_verb_method
     def delete(self, uri, **kwargs):
-        """Sends a HTTP DELETE command to the BIGIP REST Server.
+        r"""Sends a HTTP DELETE command to the BIGIP REST Server.
 
         Use this method to send a DELETE command to the BIGIP.  When calling
         this method with the optional arguments ``name`` and ``partition``
@@ -501,7 +501,7 @@ class iControlRESTSession(object):
 
     @decorate_HTTP_verb_method
     def get(self, uri, **kwargs):
-        """Sends a HTTP GET command to the BIGIP REST Server.
+        r"""Sends a HTTP GET command to the BIGIP REST Server.
 
         Use this method to send a GET command to the BIGIP.  When calling
         this method with the optional arguments ``name`` and ``partition``
@@ -529,7 +529,7 @@ class iControlRESTSession(object):
 
     @decorate_HTTP_verb_method
     def patch(self, uri, data=None, **kwargs):
-        """Sends a HTTP PATCH command to the BIGIP REST Server.
+        r"""Sends a HTTP PATCH command to the BIGIP REST Server.
 
         Use this method to send a PATCH command to the BIGIP.  When calling
         this method with the optional arguments ``name`` and ``partition``
@@ -559,7 +559,7 @@ class iControlRESTSession(object):
 
     @decorate_HTTP_verb_method
     def post(self, uri, data=None, json=None, **kwargs):
-        """Sends a HTTP POST command to the BIGIP REST Server.
+        r"""Sends a HTTP POST command to the BIGIP REST Server.
 
         Use this method to send a POST command to the BIGIP.  When calling
         this method with the optional arguments ``name`` and ``partition``
@@ -591,7 +591,7 @@ class iControlRESTSession(object):
 
     @decorate_HTTP_verb_method
     def put(self, uri, data=None, **kwargs):
-        """Sends a HTTP PUT command to the BIGIP REST Server.
+        r"""Sends a HTTP PUT command to the BIGIP REST Server.
 
         Use this method to send a PUT command to the BIGIP.  When calling
         this method with the optional arguments ``name`` and ``partition``

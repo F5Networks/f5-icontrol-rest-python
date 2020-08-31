@@ -551,5 +551,5 @@ def test__init__with_verify():
     icrs = session.iControlRESTSession(
         'test_name', 'test_pw', token=True, verify='/path/to/cert'
     )
-    assert icrs.session.verify is '/path/to/cert'
-    assert icrs.session.auth.verify is '/path/to/cert'
+    assert icrs.session.verify == '/path/to/cert'
+    assert icrs.session.auth.verify == '/path/to/cert'
