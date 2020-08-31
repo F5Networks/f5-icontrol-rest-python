@@ -209,9 +209,7 @@ def invalid_url(func, url):
     '''Reusable test to make sure that we get 404 for invalid URL '''
     with pytest.raises(HTTPError) as err:
         func(url)
-    return (err.value.response.status_code == 404 and
-            'Unexpected Error: Not Found for uri: ' + url
-            in str(err.value))
+    return (err.value.response.status_code == 404 and 'Unexpected Error: Not Found for uri: ' + url in str(err.value))
 
 
 def invalid_credentials(user, password, url):
@@ -219,8 +217,7 @@ def invalid_credentials(user, password, url):
     icr = iControlRESTSession(user, password)
     with pytest.raises(HTTPError) as err:
         icr.get(url)
-    return (err.value.response.status_code == 401 and
-            '401 Client Error: F5 Authorization Required' in str(err.value))
+    return (err.value.response.status_code == 401 and '401 Client Error: F5 Authorization Required' in str(err.value))
 
 
 def invalid_token_credentials(user, password, url):
@@ -228,8 +225,7 @@ def invalid_token_credentials(user, password, url):
     icr = iControlRESTSession(user, password, token=True)
     with pytest.raises(HTTPError) as err:
         icr.get(url)
-    return (err.value.response.status_code == 401 and
-            'Authentication required!' in str(err.value))
+    return (err.value.response.status_code == 401 and 'Authentication required!' in str(err.value))
 
 
 def test_get_with_subpath(setup_subpath, ICR, BASE_URL):
@@ -298,10 +294,8 @@ def test_post(request, ICR, POST_URL):
     assert response.status_code == 200
     assert(response_data['name'] == nat_data['name'])
     assert(response_data['partition'] == nat_data['partition'])
-    assert(response_data['originatingAddress'] ==
-           nat_data['originatingAddress'])
-    assert(response_data['translationAddress'] ==
-           nat_data['translationAddress'])
+    assert(response_data['originatingAddress'] == nat_data['originatingAddress'])
+    assert(response_data['translationAddress'] == nat_data['translationAddress'])
 
 
 def test_post_invalid_url(ICR, FAKE_URL):
