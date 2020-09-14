@@ -1,6 +1,8 @@
 f5-icontrol-rest-python
 =======================
 
+**Note this repo is archived and is no longer maintained.**
+
 |Build Status| |Documentation Status| |slack badge|
 
 Introduction
