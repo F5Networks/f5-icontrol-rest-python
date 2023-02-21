@@ -477,6 +477,8 @@ class iControlRESTSession(object):
         """
         args1 = get_request_args(kwargs)
         args2 = get_send_args(kwargs)
+        if 'timeout' not in args2:
+            args2['timeout'] = self.session.timeout
         req = requests.Request('DELETE', uri, **args1)
         prepared = self.session.prepare_request(req)
         if self.debug:
@@ -505,6 +507,8 @@ class iControlRESTSession(object):
         """
         args1 = get_request_args(kwargs)
         args2 = get_send_args(kwargs)
+        if 'timeout' not in args2:
+            args2['timeout'] = self.session.timeout
         req = requests.Request('GET', uri, **args1)
         prepared = self.session.prepare_request(req)
         if self.debug:
@@ -535,6 +539,8 @@ class iControlRESTSession(object):
         """
         args1 = get_request_args(kwargs)
         args2 = get_send_args(kwargs)
+        if 'timeout' not in args2:
+            args2['timeout'] = self.session.timeout
         req = requests.Request('PATCH', uri, data=data, **args1)
         prepared = self.session.prepare_request(req)
         if self.debug:
@@ -567,6 +573,8 @@ class iControlRESTSession(object):
         """
         args1 = get_request_args(kwargs)
         args2 = get_send_args(kwargs)
+        if 'timeout' not in args2:
+            args2['timeout'] = self.session.timeout
         req = requests.Request('POST', uri, data=data, json=json, **args1)
         prepared = self.session.prepare_request(req)
         if self.debug:
@@ -599,6 +607,8 @@ class iControlRESTSession(object):
         """
         args1 = get_request_args(kwargs)
         args2 = get_send_args(kwargs)
+        if 'timeout' not in args2:
+            args2['timeout'] = self.session.timeout
         req = requests.Request('PUT', uri, data=data, **args1)
         prepared = self.session.prepare_request(req)
         if self.debug:
