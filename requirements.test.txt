@@ -4,7 +4,7 @@
 # Test Requirements
 flake8==2.6.2
 pep8==1.7.0
-pyflakes==1.3.0
+pyflakes==1.2.3
 mccabe==0.5.2
 mock==1.3.0
 pytest==2.9.1
