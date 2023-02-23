@@ -30,7 +30,7 @@ before_deploy: PKG_VERSION=$(python -c "import icontrol; print(icontrol.__versio
 deploy:
   - provider: releases
     api_key:
-      secure: Nc4NrVZqv5L0Ss8UQh0Glx8AKkL1NfClcvmOrg6kyj+jqnZYbqVbWN7Od8K9tp9pD613mQ86RL8vDV25wxEQY/Z0MidKuWqmM7PkriCe6ZXYhO2qB/jTouWr6ucv2xz4CZE2HRV3gJMKT6zFzKUZD2zUcojoIfzOM1KK2ggohEzkXXzpCtXFbVRB5B5WpMJ5+MQKBKGAUIF2RCiMiVRkqIfEg9dVziNNsSfXOjq5zelEIx3ePj/9/1OCrcjIpdp1SDc7soM79JDcmTyUkeUiczrZyXqw9972wI3zYDTAK/cDyPv/DzHF+N4jLOlI8j1lx8u/tgukAN98x2PqLhkxnezz1wGX17UDyQEvhCXs94+dhB20QulVfjCz+t2xaFozsC5z2C22ogRNIWtIg65x/Uj8YyO1AqNG8gmEYHErlQQGUcdyWhoApvAEF7BGFRZzlyWRBpxu3m4LKPRhahF1g3qOqVt3SHNG2uF4zJOJf+8MBG07A0QNhWCfre5sszsxUaiaePjUrABAgRijU2MPnOwaEzfnPoFH6j40CrpYhVQRn1v97e8Nk547gErIaAoATeJ4XDhAOXWj8qZrN9XBRtnu0AqVL59JtpeORAT5PWjM2bU5gUYk6CuBofdVOVo7qBWFL0nwu8hUneD5ur6t2v6TinktW4zheNNHQUFsH/4=
+      secure: "4efz0WaEiHvWwqHJZvIeoXQL8ZGSqJeB8/8lv0G4aYvDzw70I4m5orjWGk8I92dgXtIByFUP58jUja+j1T5Y6WTFYNVCD4Hr6c8xNtsmDoReoHJQOGC0IgBavT7E47qAZjQqVw5n7TMjZmIRjeHg7fA/NjbFLSkIHqxLD+91+D5DY7A7M9FZfHAfzlomORPoZzcbkUsptH5RAOwrQGYcazraAMVJIzMkilhH11Vkn/bLHmqkMQ/4fFu4R9+Kf334MaLnziyUrS1SzHPRMQojPQL0c5RUnw3PFl6M8JlZzQytHoQcnaR+bVbXhDEXnMRH2BrSiXpcVivV8VBQsTOuqujeZ5mUtFK//gT2Y6z5nteekgxxz3xMwnH6TYxPOOnbf4EYtOuAGMZ91VYrTDiSGmC3CHHmGRmUgoWbsPTup2hHv6zYHu5a4MNsocMYfuqpDM22xkLVL3EZy6iQWi9p32O90xIIh9Nyohq3nUuFG0IhvVuwm7mdmb49Ds17SB9VcIDQkkbwxKW56fiIWRjK8XeVPIFH2S5iWdWj1PBResAHamuoiyg2D5I7DV5IyYbFVVDXOAZLik4McN11zyTXUmp6LyG431sZmpDMVZ6WIJMbpPoC7hheZVrK0YITCeYO8HAnTMZOR43df6uzG6q28rZmMClRNyjH+ymSKqFyruM="
     file:
       - ${DIST_REPO}/rpms/build/f5-icontrol-rest-${PKG_VERSION}-1.el7.noarch.rpm
       - ${DIST_REPO}/deb_dist/python-f5-icontrol-rest_${PKG_VERSION}-1_1404_all.deb
@@ -38,13 +38,6 @@ deploy:
     overwrite: true
     on:
       repo: F5Networks/f5-icontrol-rest-python
-      tags: true
-      python: 2.7
-  - provider: pypi
-    user: $PYPI_USER
-    password: $PYPI_PASSWORD
-    on:
-      all_branches: true
       tags: true
       python: 2.7
 notifications:
