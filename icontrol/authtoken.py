@@ -63,7 +63,7 @@ class iControlRESTTokenAuth(AuthBase):
     of ``login_provider_name``.
     """
     def __init__(self, username, password, login_provider_name='tmos',
-                 verify=False, auth_provider=None):
+                 verify=False, auth_provider=None, timeout=30):
         self.username = username
         self.password = password
         self.login_provider_name = login_provider_name
@@ -74,6 +74,7 @@ class iControlRESTTokenAuth(AuthBase):
         self.auth_provider = auth_provider
         # We don't actually do auth at this point because we don't have a
         # hostname to authenticate to.
+        self.timeout = timeout
 
     def _check_token_validity(self):
         if not self.token:
@@ -95,7 +96,11 @@ class iControlRESTTokenAuth(AuthBase):
         """
         url = "https://%s/info/system?null" % (netloc)
 
-        response = requests.get(url, verify=self.verify)
+        response = requests.get(
+            url,
+            verify=self.verify,
+            timeout=self.timeout
+        )
         if not response.ok or not hasattr(response, "json"):
             error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
                             (response.status_code,
@@ -147,7 +152,8 @@ class iControlRESTTokenAuth(AuthBase):
             login_url,
             json=login_body,
             verify=self.verify,
-            auth=HTTPBasicAuth(self.username, self.password)
+            auth=HTTPBasicAuth(self.username, self.password),
+            timeout=self.timeout
         )
         self.attempts += 1
         if not response.ok or not hasattr(response, "json"):
