@@ -100,7 +100,7 @@ class iControlRESTTokenAuth(AuthBase):
 
         response = requests.get(url, verify=self.verify, proxies=self.proxies)
         if not response.ok or not hasattr(response, "json"):
-            error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
+            error_message = '%s Unexpected Error: %s for uri: %s Text: %r' %\
                             (response.status_code,
                              response.reason,
                              response.url,
@@ -155,7 +155,7 @@ class iControlRESTTokenAuth(AuthBase):
         )
         self.attempts += 1
         if not response.ok or not hasattr(response, "json"):
-            error_message = '%s Unexpected Error: %s for uri: %s\nText: %r' %\
+            error_message = '%s Unexpected Error: %s for uri: %s Text: %r' %\
                             (response.status_code,
                              response.reason,
                              response.url,
@@ -173,7 +173,7 @@ class iControlRESTTokenAuth(AuthBase):
             )
         except (KeyError, ValueError):
             error_message = \
-                '%s Unparseable Response: %s for uri: %s\nText: %r' %\
+                '%s Unparseable Response: %s for uri: %s Text: %r' %\
                 (response.status_code,
                  response.reason,
                  response.url,
@@ -187,7 +187,7 @@ class iControlRESTTokenAuth(AuthBase):
             )
         except iControlUnexpectedHTTPError:
             error_message = \
-                '%s Token already expired: %s for uri: %s\nText: %r' % \
+                '%s Token already expired: %s for uri: %s Text: %r' % \
                 (response.status_code,
                  time.ctime(expiration_bigip),
                  response.url,
